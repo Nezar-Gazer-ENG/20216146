@@ -1,14 +1,29 @@
 package com.sdaproject.api20216146.model;
 
+import javax.persistence.*;
+
+@Entity
 public class Notification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false) 
     private User user;
+
     private String message;
-    private String type; 
+    
+    @Enumerated(EnumType.STRING) 
+    private NotificationType type;
+    
     private boolean sent;
 
-    public Notification(Long id, User user, String message, String type, boolean sent) {
-        this.id = id;
+    public Notification() {
+    }
+
+    public Notification(User user, String message, NotificationType type, boolean sent) {
         this.user = user;
         this.message = message;
         this.type = type;
@@ -39,11 +54,11 @@ public class Notification {
         this.message = message;
     }
 
-    public String getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
         this.type = type;
     }
 

@@ -1,45 +1,49 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.Event;
+import com.sdaproject.api20216146.repository.EventRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EventService {
 
-    private List<Event> events = new ArrayList<>();
+    @Autowired
+    private EventRepository eventRepository;
 
     public Event createEvent(Event event) {
-        events.add(event);
-        return event;
+        return eventRepository.save(event);
     }
 
     public Event getEvent(Long id) {
-        return events.stream().filter(event -> event.getId().equals(id)).findFirst().orElse(null);
+        return eventRepository.findById(id).orElse(null);
     }
 
     public List<Event> getAllEvents() {
-        return events;
+        return eventRepository.findAll();
     }
 
     public Event updateEvent(Long id, Event updatedEvent) {
-        Event event = events.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
-        if (event != null) {
+        Optional<Event> eventOptional = eventRepository.findById(id);
+        if (eventOptional.isPresent()) {
+            Event event = eventOptional.get();
             event.setName(updatedEvent.getName());
             event.setLocation(updatedEvent.getLocation());
             event.setEventDate(updatedEvent.getEventDate());
             event.setDescription(updatedEvent.getDescription());
             event.setTicketPrice(updatedEvent.getTicketPrice());
+            return eventRepository.save(event);
         }
-        return event;
+        return null;
     }
 
     public String deleteEvent(Long id) {
-        Event event = events.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
-        if (event != null) {
-            events.remove(event);
+        Optional<Event> eventOptional = eventRepository.findById(id);
+        if (eventOptional.isPresent()) {
+            eventRepository.delete(eventOptional.get());
             return "Event deleted";
         }
         return "Event not found";

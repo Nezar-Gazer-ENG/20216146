@@ -1,44 +1,48 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.HotelRoom;
+import com.sdaproject.api20216146.repository.HotelRoomRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class HotelRoomService {
 
-    private List<HotelRoom> hotelRooms = new ArrayList<>();
+    @Autowired
+    private HotelRoomRepository hotelRoomRepository;
 
     public HotelRoom createHotelRoom(HotelRoom hotelRoom) {
-        hotelRooms.add(hotelRoom);
-        return hotelRoom;
+        return hotelRoomRepository.save(hotelRoom);
     }
 
     public HotelRoom getHotelRoom(Long id) {
-        return hotelRooms.stream().filter(hotelRoom -> hotelRoom.getId().equals(id)).findFirst().orElse(null);
+        return hotelRoomRepository.findById(id).orElse(null);
     }
 
     public List<HotelRoom> getAllHotelRooms() {
-        return hotelRooms;
+        return hotelRoomRepository.findAll();
     }
 
     public HotelRoom updateHotelRoom(Long id, HotelRoom updatedHotelRoom) {
-        HotelRoom hotelRoom = hotelRooms.stream().filter(h -> h.getId().equals(id)).findFirst().orElse(null);
-        if (hotelRoom != null) {
+        Optional<HotelRoom> hotelRoomOptional = hotelRoomRepository.findById(id);
+        if (hotelRoomOptional.isPresent()) {
+            HotelRoom hotelRoom = hotelRoomOptional.get();
             hotelRoom.setRoomType(updatedHotelRoom.getRoomType());
             hotelRoom.setRoomNumber(updatedHotelRoom.getRoomNumber());
             hotelRoom.setPricePerNight(updatedHotelRoom.getPricePerNight());
             hotelRoom.setAvailable(updatedHotelRoom.isAvailable());
+            return hotelRoomRepository.save(hotelRoom);
         }
-        return hotelRoom;
+        return null;
     }
 
     public String deleteHotelRoom(Long id) {
-        HotelRoom hotelRoom = hotelRooms.stream().filter(h -> h.getId().equals(id)).findFirst().orElse(null);
-        if (hotelRoom != null) {
-            hotelRooms.remove(hotelRoom);
+        Optional<HotelRoom> hotelRoomOptional = hotelRoomRepository.findById(id);
+        if (hotelRoomOptional.isPresent()) {
+            hotelRoomRepository.delete(hotelRoomOptional.get());
             return "Hotel room deleted";
         }
         return "Hotel room not found";

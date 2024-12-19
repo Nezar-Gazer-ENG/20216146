@@ -1,17 +1,29 @@
 package com.sdaproject.api20216146.model;
 
+import javax.persistence.*;
 import java.time.LocalDate;
 
+@Entity
 public class Event {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
+
     private String location;
+
     private LocalDate eventDate;
+
     private String description;
+
     private double ticketPrice;
 
-    public Event(Long id, String name, String location, LocalDate eventDate, String description, double ticketPrice) {
-        this.id = id;
+    public Event() {
+    }
+
+    public Event(String name, String location, LocalDate eventDate, String description, double ticketPrice) {
         this.name = name;
         this.location = location;
         this.eventDate = eventDate;
@@ -65,5 +77,13 @@ public class Event {
 
     public void setTicketPrice(double ticketPrice) {
         this.ticketPrice = ticketPrice;
+    }
+
+    public boolean isAvailable() {
+        return true;
+    }
+
+    public int getAvailableTickets() {
+        return 100; 
     }
 }

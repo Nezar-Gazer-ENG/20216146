@@ -1,14 +1,26 @@
 package com.sdaproject.api20216146.model;
 
+import javax.persistence.*;
+
+@Entity
 public class HotelRoom {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String roomType;
+
     private String roomNumber;
+
     private double pricePerNight;
+
     private boolean available;
 
-    public HotelRoom(Long id, String roomType, String roomNumber, double pricePerNight, boolean available) {
-        this.id = id;
+    public HotelRoom() {
+    }
+
+    public HotelRoom(String roomType, String roomNumber, double pricePerNight, boolean available) {
         this.roomType = roomType;
         this.roomNumber = roomNumber;
         this.pricePerNight = pricePerNight;

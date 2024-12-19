@@ -1,43 +1,47 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.Notification;
+import com.sdaproject.api20216146.repository.NotificationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotificationService {
 
-    private List<Notification> notifications = new ArrayList<>();
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public Notification createNotification(Notification notification) {
-        notifications.add(notification);
-        return notification;
+        return notificationRepository.save(notification);
     }
 
     public Notification getNotification(Long id) {
-        return notifications.stream().filter(notification -> notification.getId().equals(id)).findFirst().orElse(null);
+        return notificationRepository.findById(id).orElse(null);
     }
 
     public List<Notification> getAllNotifications() {
-        return notifications;
+        return notificationRepository.findAll();
     }
 
     public Notification updateNotification(Long id, Notification updatedNotification) {
-        Notification notification = notifications.stream().filter(n -> n.getId().equals(id)).findFirst().orElse(null);
-        if (notification != null) {
+        Optional<Notification> notificationOptional = notificationRepository.findById(id);
+        if (notificationOptional.isPresent()) {
+            Notification notification = notificationOptional.get();
             notification.setMessage(updatedNotification.getMessage());
             notification.setType(updatedNotification.getType());
             notification.setSent(updatedNotification.isSent());
+            return notificationRepository.save(notification);
         }
-        return notification;
+        return null;
     }
 
     public String deleteNotification(Long id) {
-        Notification notification = notifications.stream().filter(n -> n.getId().equals(id)).findFirst().orElse(null);
-        if (notification != null) {
-            notifications.remove(notification);
+        Optional<Notification> notificationOptional = notificationRepository.findById(id);
+        if (notificationOptional.isPresent()) {
+            notificationRepository.delete(notificationOptional.get());
             return "Notification deleted";
         }
         return "Notification not found";
