@@ -3,17 +3,17 @@ package com.sdaproject.api20216146.model;
 public class HotelRoom {
 
     private Long id;
+    private String name;
     private String roomType;
-    private String roomNumber;
     private double pricePerNight;
     private boolean available;
 
     public HotelRoom() {
     }
 
-    public HotelRoom(String roomType, String roomNumber, double pricePerNight, boolean available) {
+    public HotelRoom(String name, String roomType, double pricePerNight, boolean available) {
+        this.name = name;
         this.roomType = roomType;
-        this.roomNumber = roomNumber;
         this.pricePerNight = pricePerNight;
         this.available = available;
     }
@@ -26,20 +26,20 @@ public class HotelRoom {
         this.id = id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getRoomType() {
         return roomType;
     }
 
     public void setRoomType(String roomType) {
         this.roomType = roomType;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
     }
 
     public double getPricePerNight() {

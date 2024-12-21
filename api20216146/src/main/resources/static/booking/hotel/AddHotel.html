@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Hotel - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.html">TravelBooking</a>
+        </div>
+    </nav>
+</header>
+
+<section class="content">
+    <h2 style="text-align: center; margin-top: 30px;">Add Hotel</h2>
+    <form id="addHotelForm" style="max-width: 600px; margin: 30px auto;">
+        <label for="name">Hotel Name:</label>
+        <input type="text" id="name" placeholder="Enter hotel name" required />
+
+        <label for="roomType">Room Type:</label>
+        <select id="roomType" required>
+            <option value="single">Single</option>
+            <option value="double">Double</option>
+            <option value="family">Family</option>
+        </select>
+
+        <label for="price">Price per Night:</label>
+        <input type="number" id="price" placeholder="Enter price per night" required />
+
+        <button type="submit" class="primary-btn">Add Hotel</button>
+    </form>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+document.getElementById('addHotelForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('name').value.trim();
+    const roomType = document.getElementById('roomType').value;
+    const price = document.getElementById('price').value;
+
+    const hotelData = {
+        name,
+        roomType,
+        pricePerNight: parseFloat(price),
+        available: true 
+    };
+
+    try {
+        const response = await fetch('/hotelrooms', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(hotelData)
+        });
+
+        if (response.ok) {
+            alert('Hotel added successfully.');
+            window.location.href = '../hotel.html';
+        } else {
+            const errorText = await response.text();
+            alert(`Error adding hotel: ${errorText}`);
+        }
+    } catch (err) {
+        console.error('Error adding hotel:', err);
+    }
+});
+
+</script>
+</body>
+</html>

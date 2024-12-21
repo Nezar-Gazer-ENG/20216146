@@ -10,11 +10,11 @@
 <header>
     <nav class="navbar">
         <div class="logo">
-            <a href="/">TravelBooking</a>
+            <a href="index.html">TravelBooking</a>
         </div>
         <ul class="nav-links">
-            <li><a href="/hotel.html">Hotels</a></li>
-            <li><a href="#">Events</a></li>
+            <li><a href="./booking/hotel.html">Hotels</a></li>
+            <li><a href="./booking/events.html">Events</a></li>
             <li><a href="/login.html">Login</a></li>
         </ul>
     </nav>
@@ -23,19 +23,19 @@
 <section class="content">
     <h2>Create an Account</h2>
     <form id="signUpForm" class="auth-form">
-        <label>Name:</label>
+        <label for="signUpName">Name:</label>
         <input type="text" id="signUpName" required />
 
-        <label>Username:</label>
+        <label for="signUpUsername">Username:</label>
         <input type="text" id="signUpUsername" required />
 
-        <label>Email:</label>
+        <label for="signUpEmail">Email:</label>
         <input type="email" id="signUpEmail" required />
 
-        <label>Password:</label>
+        <label for="signUpPassword">Password:</label>
         <input type="password" id="signUpPassword" required />
 
-        <label>Confirm Password:</label>
+        <label for="signUpConfirmPassword">Confirm Password:</label>
         <input type="password" id="signUpConfirmPassword" required />
 
         <button type="submit" class="primary-btn">Sign Up</button>
@@ -49,6 +49,47 @@
     </div>
 </footer>
 
-<script src="/script.js"></script>
+<script>
+    document.getElementById('signUpForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('signUpName').value.trim();
+        const username = document.getElementById('signUpUsername').value.trim();
+        const email = document.getElementById('signUpEmail').value.trim();
+        const password = document.getElementById('signUpPassword').value;
+        const confirmPassword = document.getElementById('signUpConfirmPassword').value;
+
+        if (password !== confirmPassword) {
+            alert("Passwords do not match. Please try again.");
+            return;
+        }
+
+        const userData = {
+            name: name,
+            username: username,
+            email: email,
+            phoneNumber: "", 
+            password: password
+        };
+
+        try {
+            const response = await fetch('/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+
+            if (response.ok) {
+                alert('User created successfully. Redirecting to login page.');
+                window.location.href = '/login.html';
+            } else {
+                const errorText = await response.text();
+                alert(`Sign up failed: ${errorText}`);
+            }
+        } catch (err) {
+            alert(`Error during sign-up: ${err.message}`);
+        }
+    });
+</script>
 </body>
 </html>

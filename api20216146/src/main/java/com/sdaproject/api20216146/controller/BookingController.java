@@ -1,58 +1,70 @@
 package com.sdaproject.api20216146.controller;
 
 import com.sdaproject.api20216146.model.Booking;
+import com.sdaproject.api20216146.model.User;
+import com.sdaproject.api20216146.service.BookingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
 
-    private List<Booking> bookings = new ArrayList<>();
-    private long currentId = 1;
+    @Autowired
+    private BookingService bookingService;
 
-    @PostMapping
-    public Booking createBooking(@RequestBody Booking booking) {
-        booking.setId(currentId++);
-        booking.setBookingDate(new Date()); // Set current date for booking
-        bookings.add(booking);
-        return booking;
+    @GetMapping
+    public List<Booking> getAllBookings() {
+        return bookingService.getAllBookings();
     }
 
     @GetMapping("/{id}")
     public Booking getBooking(@PathVariable Long id) {
-        return bookings.stream()
-                .filter(booking -> booking.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return bookingService.getBooking(id);
     }
 
-    @GetMapping
-    public List<Booking> getAllBookings() {
-        return bookings;
+    @PostMapping
+    public ResponseEntity<?> createBooking(@RequestBody Booking booking, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(401).body("You must be logged in to book.");
+        }
+
+        booking.setUser(loggedInUser);
+        Booking createdBooking = bookingService.createBooking(booking);
+        return ResponseEntity.ok(createdBooking);
     }
 
     @PutMapping("/{id}")
-    public Booking updateBooking(@PathVariable Long id, @RequestBody Booking updatedBooking) {
-        for (Booking booking : bookings) {
-            if (booking.getId().equals(id)) {
-                booking.setUser(updatedBooking.getUser());
-                booking.setHotelRoom(updatedBooking.getHotelRoom());
-                booking.setEvent(updatedBooking.getEvent());
-                booking.setBookingDate(updatedBooking.getBookingDate());
-                booking.setTotalAmount(updatedBooking.getTotalAmount());
-                return booking;
-            }
+    public ResponseEntity<?> updateBooking(@PathVariable Long id, @RequestBody Booking updatedBooking, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(401).body("You must be logged in to update a booking.");
         }
-        return null;
+
+        Booking result = bookingService.updateBooking(id, updatedBooking);
+        if (result == null) {
+            return ResponseEntity.status(404).body("Booking not found");
+        }
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteBooking(@PathVariable Long id) {
-        boolean removed = bookings.removeIf(booking -> booking.getId().equals(id));
-        return removed ? "Booking deleted" : "Booking not found";
+    public ResponseEntity<?> deleteBooking(@PathVariable Long id, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(401).body("You must be logged in to delete a booking.");
+        }
+
+        String message = bookingService.deleteBooking(id);
+        if ("Booking deleted".equals(message)) {
+            return ResponseEntity.ok(message);
+        } else {
+            return ResponseEntity.status(404).body(message);
+        }
     }
 }

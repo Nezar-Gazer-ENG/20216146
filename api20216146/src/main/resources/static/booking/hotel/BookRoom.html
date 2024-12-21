@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Room - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.html">TravelBooking</a>
+        </div>
+    </nav>
+</header>
+
+<section class="content">
+    <h2 style="text-align: center; margin-top: 30px;">Book Room</h2>
+    <form id="bookRoomForm" style="max-width: 600px; margin: 30px auto;">
+        <label for="checkIn">Check-in Date:</label>
+        <input type="date" id="checkIn" required />
+
+        <label for="checkOut">Check-out Date:</label>
+        <input type="date" id="checkOut" required />
+
+        <p id="totalCost" style="text-align: center; margin: 20px 0;">Total Cost: $0</p>
+
+        <button type="submit" class="primary-btn">Confirm Booking</button>
+    </form>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    const queryParams = new URLSearchParams(window.location.search);
+    const hotelId = queryParams.get('hotelId');
+    const pricePerNight = 100; // Replace with actual value fetched from backend
+
+    document.getElementById('checkOut').addEventListener('change', calculateCost);
+
+    function calculateCost() {
+        const checkIn = new Date(document.getElementById('checkIn').value);
+        const checkOut = new Date(document.getElementById('checkOut').value);
+
+        if (checkIn && checkOut && checkOut > checkIn) {
+            const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+            document.getElementById('totalCost').textContent = `Total Cost: $${nights * pricePerNight}`;
+        }
+    }
+
+    document.getElementById('bookRoomForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const checkIn = document.getElementById('checkIn').value;
+        const checkOut = document.getElementById('checkOut').value;
+
+        try {
+            const response = await fetch(`/bookings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hotelId, checkIn, checkOut })
+            });
+
+            if (response.ok) {
+                alert('Booking confirmed.');
+                window.location.href = '/view_bookings.html';
+            } else {
+                alert('Error booking room.');
+            }
+        } catch (err) {
+            console.error('Error booking room:', err);
+        }
+    });
+</script>
+</body>
+</html>

@@ -5,11 +5,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class HotelRoomService {
 
-    private List<HotelRoom> hotelRooms = new ArrayList<>();
+    private final List<HotelRoom> hotelRooms = new ArrayList<>();
     private long currentId = 1L;
 
     public HotelRoom createHotelRoom(HotelRoom hotelRoom) {
@@ -26,20 +27,23 @@ public class HotelRoomService {
     }
 
     public List<HotelRoom> getAllHotelRooms() {
-        return hotelRooms;
+        return new ArrayList<>(hotelRooms);
     }
 
     public HotelRoom updateHotelRoom(Long id, HotelRoom updatedHotelRoom) {
-        for (int i = 0; i < hotelRooms.size(); i++) {
-            HotelRoom existingHotelRoom = hotelRooms.get(i);
-            if (existingHotelRoom.getId().equals(id)) {
-                existingHotelRoom.setRoomType(updatedHotelRoom.getRoomType());
-                existingHotelRoom.setRoomNumber(updatedHotelRoom.getRoomNumber());
-                existingHotelRoom.setPricePerNight(updatedHotelRoom.getPricePerNight());
-                existingHotelRoom.setAvailable(updatedHotelRoom.isAvailable());
-                return existingHotelRoom;
-            }
+        Optional<HotelRoom> existingHotelRoomOpt = hotelRooms.stream()
+                .filter(hotelRoom -> hotelRoom.getId().equals(id))
+                .findFirst();
+
+        if (existingHotelRoomOpt.isPresent()) {
+            HotelRoom existingHotelRoom = existingHotelRoomOpt.get();
+            existingHotelRoom.setName(updatedHotelRoom.getName());
+            existingHotelRoom.setRoomType(updatedHotelRoom.getRoomType());
+            existingHotelRoom.setPricePerNight(updatedHotelRoom.getPricePerNight());
+            existingHotelRoom.setAvailable(updatedHotelRoom.isAvailable());
+            return existingHotelRoom;
         }
+
         return null;
     }
 

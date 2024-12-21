@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Bookings - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+        .booking-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .booking-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .booking-card h3 {
+            margin: 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .booking-card p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .booking-card button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .booking-card button:hover {
+            background-color: #a71d2a;
+        }
+
+        .empty-message {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 1.2rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="../index.html">TravelBooking</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/hotel.html">Hotels</a></li>
+            <li><a href="/events.html">Events</a></li>
+            <li><a href="/booking.html">Booking</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2 style="text-align: center; margin-top: 30px;">My Bookings</h2>
+    <div class="booking-container" id="bookingsContainer">
+        <!-- Booking cards will be dynamically inserted here -->
+    </div>
+    <p class="empty-message" id="emptyMessage" style="display: none;">You have no bookings yet. Start exploring!</p>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    async function fetchBookings() {
+        try {
+            const response = await fetch('/auth/me');
+            if (!response.ok) {
+                alert('Please log in to view your bookings.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const bookingsResponse = await fetch('/bookings');
+            if (bookingsResponse.ok) {
+                const bookings = await bookingsResponse.json();
+                const bookingsContainer = document.getElementById('bookingsContainer');
+                const emptyMessage = document.getElementById('emptyMessage');
+
+                if (bookings.length === 0) {
+                    emptyMessage.style.display = 'block';
+                    return;
+                }
+
+                bookings.forEach(booking => {
+                    const bookingCard = document.createElement('div');
+                    bookingCard.className = 'booking-card';
+
+                    bookingCard.innerHTML = `
+                        <h3>${booking.type === 'hotel' ? 'Hotel Booking' : 'Event Booking'}</h3>
+                        <p><strong>Details:</strong> ${booking.details}</p>
+                        <p><strong>Date:</strong> ${booking.date}</p>
+                        <p><strong>Total:</strong> $${booking.totalAmount}</p>
+                        <button onclick="cancelBooking(${booking.id})">Cancel Booking</button>
+                    `;
+
+                    bookingsContainer.appendChild(bookingCard);
+                });
+            } else {
+                alert('Error fetching bookings. Please try again later.');
+            }
+        } catch (err) {
+            console.error('Error fetching bookings:', err);
+            alert('An error occurred. Please try again later.');
+        }
+    }
+
+    async function cancelBooking(bookingId) {
+        if (confirm('Are you sure you want to cancel this booking?')) {
+            try {
+                const response = await fetch(`/bookings/${bookingId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Booking canceled successfully.');
+                    window.location.reload();
+                } else {
+                    const errorText = await response.text();
+                    alert(`Error canceling booking: ${errorText}`);
+                }
+            } catch (err) {
+                alert('An error occurred while canceling the booking. Please try again later.');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchBookings);
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Events - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+        .event-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .event-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-card img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .event-card h3 {
+            margin: 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .event-card p {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .event-card button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .event-card button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="../index.html">TravelBooking</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/hotel.html">Hotels</a></li>
+            <li><a href="/events.html">Events</a></li>
+            <li><a href="#" id="bookingsBtn">Bookings</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2 style="text-align: center; margin-top: 30px;">Explore Local Events</h2>
+    <div class="event-container" id="eventsContainer">
+    </div>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    async function fetchEvents() {
+        try {
+            const response = await fetch('/events');
+            const events = await response.json();
+
+            const eventsContainer = document.getElementById('eventsContainer');
+            eventsContainer.innerHTML = '';
+
+            events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'event-card';
+
+                eventCard.innerHTML = `
+                    <img src="${event.imageUrl}" alt="${event.name}" />
+                    <h3>${event.name}</h3>
+                    <p>${event.description}</p>
+                    <p><strong>Date:</strong> ${event.date}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <p><strong>Price:</strong> $${event.price}</p>
+                    <button onclick="bookEvent(${event.id})">Book Now</button>
+                `;
+
+                eventsContainer.appendChild(eventCard);
+            });
+        } catch (err) {
+            console.error('Error fetching events:', err);
+        }
+    }
+
+    async function bookEvent(eventId) {
+        try {
+            const response = await fetch('/auth/me');
+            if (!response.ok) {
+                alert('Please log in to book an event.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const bookingResponse = await fetch(`/events/book/${eventId}`, {
+                method: 'POST'
+            });
+
+            if (bookingResponse.ok) {
+                alert('Event booked successfully!');
+            } else {
+                const errorText = await bookingResponse.text();
+                alert(`Error booking event: ${errorText}`);
+            }
+        } catch (err) {
+            alert('An error occurred while booking the event. Please try again later.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchEvents);
+</script>
+</body>
+</html>

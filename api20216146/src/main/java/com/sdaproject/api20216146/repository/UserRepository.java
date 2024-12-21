@@ -18,27 +18,19 @@ public class UserRepository {
             user.setId(currentId++);
             users.add(user);
         } else {
-            // Update existing user if found
-            boolean updated = false;
             for (int i = 0; i < users.size(); i++) {
                 if (users.get(i).getId().equals(user.getId())) {
                     users.set(i, user);
-                    updated = true;
-                    break;
+                    return user;
                 }
             }
-            // If not found by ID, treat as new
-            if (!updated) {
-                users.add(user);
-            }
+            users.add(user);
         }
         return user;
     }
 
     public Optional<User> findById(Long id) {
-        return users.stream()
-                .filter(user -> user.getId().equals(id))
-                .findFirst();
+        return users.stream().filter(u -> u.getId().equals(id)).findFirst();
     }
 
     public List<User> findAll() {
@@ -46,6 +38,20 @@ public class UserRepository {
     }
 
     public void deleteById(Long id) {
-        users.removeIf(user -> user.getId().equals(id));
+        users.removeIf(u -> u.getId().equals(id));
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return users.stream()
+                .filter(u -> u.getUsername().equalsIgnoreCase(username))
+                .findFirst();
+    }
+
+    public boolean usernameExists(String username) {
+        return users.stream().anyMatch(u -> u.getUsername().equalsIgnoreCase(username));
+    }
+
+    public boolean emailExists(String email) {
+        return users.stream().anyMatch(u -> u.getEmail().equalsIgnoreCase(email));
     }
 }

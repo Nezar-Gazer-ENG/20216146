@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hotels - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.html">TravelBooking</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/hotel.html">Hotels</a></li>
+            <li><a href="/events.html">Events</a></li>
+            <li><a href="/view_bookings.html">Bookings</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2 style="text-align: center; margin-top: 30px;">Manage Hotels</h2>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="./hotel/AddHotel.html" class="primary-btn">Add Hotel</a>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+        <input type="text" id="searchName" placeholder="Search by name" style="padding: 8px; width: 200px; margin-right: 10px;" />
+        <select id="filterRoomType" style="padding: 8px; margin-right: 10px;">
+            <option value="">All Room Types</option>
+            <option value="single">Single</option>
+            <option value="double">Double</option>
+            <option value="family">Family</option>
+        </select>
+        <input type="number" id="filterPrice" placeholder="Max Price" style="padding: 8px; width: 150px; margin-right: 10px;" />
+        <button onclick="applyFilters()" class="primary-btn">Apply Filters</button>
+    </div>
+
+    <div id="hotelsContainer" style="margin-top: 30px;"></div>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    let allHotels = [];
+
+    async function fetchHotels() {
+        try {
+            const response = await fetch('/hotelrooms');
+            if (response.ok) {
+                allHotels = await response.json();
+                displayHotels(allHotels);
+            } else {
+                alert('Error fetching hotels. Please try again later.');
+            }
+        } catch (err) {
+            console.error('Error fetching hotels:', err);
+            alert('An error occurred while fetching hotels.');
+        }
+    }
+
+    function displayHotels(hotels) {
+        const hotelsContainer = document.getElementById('hotelsContainer');
+        hotelsContainer.innerHTML = '';
+
+        if (hotels.length === 0) {
+            hotelsContainer.innerHTML = '<p>No hotels match your criteria.</p>';
+            return;
+        }
+
+        hotels.forEach(hotel => {
+            const hotelRow = document.createElement('div');
+            hotelRow.style.display = 'flex';
+            hotelRow.style.justifyContent = 'space-between';
+            hotelRow.style.alignItems = 'center';
+            hotelRow.style.padding = '10px';
+            hotelRow.style.borderBottom = '1px solid #ddd';
+
+            hotelRow.innerHTML = `
+                <span>${hotel.name}</span>
+                <span>${hotel.roomType}</span>
+                <span>$${hotel.pricePerNight.toFixed(2)}</span>
+                <button onclick="bookHotel(${hotel.id})">Book</button>
+                <button onclick="editHotel(${hotel.id})">Edit</button>
+                <button onclick="deleteHotel(${hotel.id})">Delete</button>
+            `;
+
+            hotelsContainer.appendChild(hotelRow);
+        });
+    }
+
+    function applyFilters() {
+        const searchName = document.getElementById('searchName').value.toLowerCase();
+        const filterRoomType = document.getElementById('filterRoomType').value;
+        const filterPrice = parseFloat(document.getElementById('filterPrice').value);
+
+        let filteredHotels = allHotels;
+
+        if (searchName) {
+            filteredHotels = filteredHotels.filter(hotel =>
+                hotel.name.toLowerCase().includes(searchName)
+            );
+        }
+
+        if (filterRoomType) {
+            filteredHotels = filteredHotels.filter(hotel => hotel.roomType === filterRoomType);
+        }
+
+        if (!isNaN(filterPrice)) {
+            filteredHotels = filteredHotels.filter(hotel => hotel.pricePerNight <= filterPrice);
+        }
+
+        displayHotels(filteredHotels);
+    }
+
+    async function bookHotel(hotelId) {
+        window.location.href = `./hotel/BookRoom.html?hotelId=${hotelId}`;
+    }
+
+    async function editHotel(hotelId) {
+        window.location.href = `./hotel/EditRoom.html?hotelId=${hotelId}`;
+    }
+
+    async function deleteHotel(hotelId) {
+        if (confirm('Are you sure you want to delete this hotel?')) {
+            try {
+                const response = await fetch(`/hotelrooms/${hotelId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Hotel deleted successfully.');
+                    fetchHotels();
+                } else {
+                    alert('Error deleting hotel.');
+                }
+            } catch (err) {
+                console.error('Error deleting hotel:', err);
+                alert('An error occurred while deleting the hotel.');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchHotels);
+</script>
+</body>
+</html>

@@ -21,7 +21,6 @@ public class BookingRepository {
             booking.setId(currentId++);
             bookings.add(booking);
         } else {
-            // If booking already has an ID, update the existing record if found
             boolean found = false;
             for (int i = 0; i < bookings.size(); i++) {
                 if (bookings.get(i).getId().equals(booking.getId())) {
@@ -30,7 +29,6 @@ public class BookingRepository {
                     break;
                 }
             }
-            // If not found, treat as new
             if (!found) {
                 bookings.add(booking);
             }
@@ -66,6 +64,14 @@ public class BookingRepository {
     public List<Booking> findByUserId(Long userId) {
         return bookings.stream()
                 .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
+                .collect(Collectors.toList());
+    }
+
+    public List<Booking> findByHotelRoomAndDateRange(HotelRoom hotelRoom, Date checkInDate, Date checkOutDate) {
+        return bookings.stream()
+                .filter(b -> b.getHotelRoom() != null && b.getHotelRoom().getId().equals(hotelRoom.getId()))
+                .filter(b -> b.getCheckInDate() != null && b.getCheckOutDate() != null)
+                .filter(b -> b.getCheckInDate().before(checkOutDate) && b.getCheckOutDate().after(checkInDate))
                 .collect(Collectors.toList());
     }
 }

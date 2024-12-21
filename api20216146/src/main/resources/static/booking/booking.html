@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .large-btn {
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            text-align: center;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .large-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="../index.html">TravelBooking</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/hotel.html">Hotels</a></li>
+            <li><a href="/events.html">Events</a></li>
+            <li><a href="#" id="bookingsBtn">Bookings</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2 style="text-align: center; margin-top: 30px;">Manage Your Bookings</h2>
+    <div class="button-container">
+        <a href="hotel.html" class="large-btn">Hotels</a>
+        <a href="events.html" class="large-btn">Events</a>
+        <a href="view_bookings.html" class="large-btn">View My Bookings</a>
+    </div>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    document.getElementById('viewBookings').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/auth/me');
+            if (response.ok) {
+                window.location.href = '/mybookings.html';
+            } else {
+                alert('Please log in to view your bookings.');
+                window.location.href = '/login.html';
+            }
+        } catch (err) {
+            alert('An error occurred. Please try again later.');
+        }
+    });
+</script>
+</body>
+</html>

@@ -10,11 +10,11 @@
 <header>
     <nav class="navbar">
         <div class="logo">
-            <a href="/">TravelBooking</a>
+            <a href="index.html">TravelBooking</a>
         </div>
         <ul class="nav-links">
-            <li><a href="/hotel.html">Hotels</a></li>
-            <li><a href="#">Events</a></li>
+            <li><a href="./booking/hotel.html">Hotels</a></li>
+            <li><a href="./booking/events.html">Events</a></li>
             <li><a href="/signup.html">Sign Up</a></li>
         </ul>
     </nav>
@@ -23,10 +23,10 @@
 <section class="content">
     <h2>Login to Your Account</h2>
     <form id="loginForm" class="auth-form">
-        <label>Username:</label>
+        <label for="loginUsername">Username:</label>
         <input type="text" id="loginUsername" required />
 
-        <label>Password:</label>
+        <label for="loginPassword">Password:</label>
         <input type="password" id="loginPassword" required />
 
         <button type="submit" class="primary-btn">Login</button>
@@ -40,6 +40,36 @@
     </div>
 </footer>
 
-<script src="/script.js"></script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        const credentials = {
+            username: username,
+            password: password
+        };
+
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials)
+            });
+
+            if (response.ok) {
+                alert('Login successful. Redirecting to your account.');
+                window.location.href = '/index.html'; // Replace with the logged-in user's dashboard or main page.
+            } else {
+                const errorText = await response.text();
+                alert(`Login failed: ${errorText}`);
+            }
+        } catch (err) {
+            alert(`Error during login: ${err.message}`);
+        }
+    });
+</script>
 </body>
 </html>
