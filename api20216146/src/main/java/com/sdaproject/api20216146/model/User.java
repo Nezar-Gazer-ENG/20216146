@@ -1,22 +1,12 @@
 package com.sdaproject.api20216146.model;
 
-import javax.persistence.*;
-
-@Entity
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-    
     private String username;
-    
     private String email;
-    
     private String phoneNumber;
-    
     private String password;
 
     public User() {

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css"/>
+    <style>
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-up-section {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .fade-up-section.animate {
+            animation: fadeUp 1s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <header class="fade-up-section">
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html">TravelBooking</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="./hotel/hotel.html">Hotels</a></li>
+                <li><a href="#">Events</a></li>
+                <li><a href="#">Bookings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero fade-up-section">
+        <div class="hero-content">
+            <h1>Discover Your Next Adventure</h1>
+            <p>Find the best deals on hotels, flights, and events at your dream destination. Start planning your next getaway now!</p>
+            <button class="primary-btn">Get Started</button>
+        </div>
+    </section>
+
+    <section class="features fade-up-section">
+        <h2>Why Choose Us?</h2>
+        <div class="feature-cards">
+            <div class="feature-card">
+                <img src="https://via.placeholder.com/100" alt="Icon for Best Prices" />
+                <h3>Best Prices Guaranteed</h3>
+                <p>We compare prices across multiple platforms to ensure you always get the best deal.</p>
+            </div>
+            <div class="feature-card">
+                <img src="https://via.placeholder.com/100" alt="Icon for Personalized Suggestions" />
+                <h3>Personalized Suggestions</h3>
+                <p>Get tailored recommendations based on your preferences and past bookings.</p>
+            </div>
+            <div class="feature-card">
+                <img src="https://via.placeholder.com/100" alt="Icon for 24/7 Support" />
+                <h3>24/7 Support</h3>
+                <p>Our dedicated support team is here to assist you any time, any day.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="call-to-action fade-up-section">
+        <h2>Ready to Explore?</h2>
+        <p>Sign up now and get exclusive access to members-only deals.</p>
+        <a href="/signup.html" class="secondary-btn">Sign Up</a>
+        <p style="margin-top: 20px; font-size: 0.9rem;">
+            Already have an account? <a href="/login.html" style="color: #007BFF; text-decoration: none;">Log in</a>
+        </p>
+    </section>
+
+    <footer class="fade-up-section">
+        <div class="footer-content">
+            <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#">Facebook</a> | 
+                <a href="#">Instagram</a> | 
+                <a href="#">Twitter</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const animatedSections = document.querySelectorAll('.fade-up-section');
+
+            animatedSections[0].classList.add('animate');
+            animatedSections[1].classList.add('animate');
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate');
+                        obs.unobserve(entry.target); 
+                    }
+                });
+            }, {
+                threshold: 0.1 
+            });
+
+            animatedSections.forEach((section, index) => {
+                if (index > 1) { 
+                    observer.observe(section);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

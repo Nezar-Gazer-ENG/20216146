@@ -1,49 +1,50 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.Notification;
-import com.sdaproject.api20216146.repository.NotificationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class NotificationService {
 
-    @Autowired
-    private NotificationRepository notificationRepository;
+    private List<Notification> notifications = new ArrayList<>();
+    private long currentId = 1L;
 
     public Notification createNotification(Notification notification) {
-        return notificationRepository.save(notification);
+        notification.setId(currentId++);
+        notifications.add(notification);
+        return notification;
     }
 
     public Notification getNotification(Long id) {
-        return notificationRepository.findById(id).orElse(null);
+        return notifications.stream()
+                .filter(notification -> notification.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     public List<Notification> getAllNotifications() {
-        return notificationRepository.findAll();
+        return notifications;
     }
 
     public Notification updateNotification(Long id, Notification updatedNotification) {
-        Optional<Notification> notificationOptional = notificationRepository.findById(id);
-        if (notificationOptional.isPresent()) {
-            Notification notification = notificationOptional.get();
-            notification.setMessage(updatedNotification.getMessage());
-            notification.setType(updatedNotification.getType());
-            notification.setSent(updatedNotification.isSent());
-            return notificationRepository.save(notification);
+        for (int i = 0; i < notifications.size(); i++) {
+            Notification existingNotification = notifications.get(i);
+            if (existingNotification.getId().equals(id)) {
+                existingNotification.setUserId(updatedNotification.getUserId());
+                existingNotification.setMessage(updatedNotification.getMessage());
+                existingNotification.setType(updatedNotification.getType());
+                existingNotification.setSent(updatedNotification.isSent());
+                return existingNotification;
+            }
         }
         return null;
     }
 
     public String deleteNotification(Long id) {
-        Optional<Notification> notificationOptional = notificationRepository.findById(id);
-        if (notificationOptional.isPresent()) {
-            notificationRepository.delete(notificationOptional.get());
-            return "Notification deleted";
-        }
-        return "Notification not found";
+        boolean removed = notifications.removeIf(notification -> notification.getId().equals(id));
+        return removed ? "Notification deleted" : "Notification not found";
     }
 }

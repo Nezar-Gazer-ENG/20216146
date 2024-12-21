@@ -1,23 +1,14 @@
 package com.sdaproject.api20216146.model;
 
-import javax.persistence.*;
 import java.time.LocalDate;
 
-@Entity
 public class Event {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-
     private String location;
-
     private LocalDate eventDate;
-
     private String description;
-
     private double ticketPrice;
 
     public Event() {
@@ -84,6 +75,6 @@ public class Event {
     }
 
     public int getAvailableTickets() {
-        return 100; 
+        return 100;
     }
 }

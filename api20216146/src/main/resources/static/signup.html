@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sign Up - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="/">TravelBooking</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/hotel.html">Hotels</a></li>
+            <li><a href="#">Events</a></li>
+            <li><a href="/login.html">Login</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2>Create an Account</h2>
+    <form id="signUpForm" class="auth-form">
+        <label>Name:</label>
+        <input type="text" id="signUpName" required />
+
+        <label>Username:</label>
+        <input type="text" id="signUpUsername" required />
+
+        <label>Email:</label>
+        <input type="email" id="signUpEmail" required />
+
+        <label>Password:</label>
+        <input type="password" id="signUpPassword" required />
+
+        <label>Confirm Password:</label>
+        <input type="password" id="signUpConfirmPassword" required />
+
+        <button type="submit" class="primary-btn">Sign Up</button>
+    </form>
+    <p>Already have an account? <a href="/login.html">Log in</a></p>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="/script.js"></script>
+</body>
+</html>

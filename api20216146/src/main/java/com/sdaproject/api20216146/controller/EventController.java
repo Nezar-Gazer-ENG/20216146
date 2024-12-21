@@ -3,6 +3,7 @@ package com.sdaproject.api20216146.controller;
 import com.sdaproject.api20216146.model.Event;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,16 +12,24 @@ import java.util.List;
 public class EventController {
 
     private List<Event> events = new ArrayList<>();
+    private long currentId = 1;
 
     @PostMapping
     public Event createEvent(@RequestBody Event event) {
+        event.setId(currentId++);
+        if (event.getEventDate() == null) {
+            event.setEventDate(LocalDate.now());
+        }
         events.add(event);
         return event;
     }
 
     @GetMapping("/{id}")
     public Event getEvent(@PathVariable Long id) {
-        return events.stream().filter(event -> event.getId().equals(id)).findFirst().orElse(null);
+        return events.stream()
+                .filter(event -> event.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     @GetMapping
@@ -30,24 +39,22 @@ public class EventController {
 
     @PutMapping("/{id}")
     public Event updateEvent(@PathVariable Long id, @RequestBody Event updatedEvent) {
-        Event event = events.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
-        if (event != null) {
-            event.setName(updatedEvent.getName());
-            event.setLocation(updatedEvent.getLocation());
-            event.setEventDate(updatedEvent.getEventDate());
-            event.setDescription(updatedEvent.getDescription());
-            event.setTicketPrice(updatedEvent.getTicketPrice());
+        for (Event event : events) {
+            if (event.getId().equals(id)) {
+                event.setName(updatedEvent.getName());
+                event.setLocation(updatedEvent.getLocation());
+                event.setEventDate(updatedEvent.getEventDate());
+                event.setDescription(updatedEvent.getDescription());
+                event.setTicketPrice(updatedEvent.getTicketPrice());
+                return event;
+            }
         }
-        return event;
+        return null;
     }
 
     @DeleteMapping("/{id}")
     public String deleteEvent(@PathVariable Long id) {
-        Event event = events.stream().filter(e -> e.getId().equals(id)).findFirst().orElse(null);
-        if (event != null) {
-            events.remove(event);
-            return "Event deleted";
-        }
-        return "Event not found";
+        boolean removed = events.removeIf(event -> event.getId().equals(id));
+        return removed ? "Event deleted" : "Event not found";
     }
 }

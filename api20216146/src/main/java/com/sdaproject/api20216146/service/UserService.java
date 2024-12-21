@@ -1,50 +1,50 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.User;
-import com.sdaproject.api20216146.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private List<User> users = new ArrayList<>();
+    private long currentId = 1L;
 
     public User createUser(User user) {
-        return userRepository.save(user);
+        user.setId(currentId++);
+        users.add(user);
+        return user;
     }
 
     public User getUser(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return users.stream()
+                .filter(user -> user.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return users;
     }
 
     public User updateUser(Long id, User updatedUser) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            user.setName(updatedUser.getName());
-            user.setEmail(updatedUser.getEmail());
-            user.setPhoneNumber(updatedUser.getPhoneNumber());
-            user.setPassword(updatedUser.getPassword());
-            return userRepository.save(user);
+        for (User existingUser : users) {
+            if (existingUser.getId().equals(id)) {
+                existingUser.setName(updatedUser.getName());
+                existingUser.setUsername(updatedUser.getUsername());
+                existingUser.setEmail(updatedUser.getEmail());
+                existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
+                existingUser.setPassword(updatedUser.getPassword());
+                return existingUser;
+            }
         }
         return null;
     }
 
     public String deleteUser(Long id) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            userRepository.delete(userOptional.get());
-            return "User deleted";
-        }
-        return "User not found";
+        boolean removed = users.removeIf(user -> user.getId().equals(id));
+        return removed ? "User deleted" : "User not found";
     }
 }

@@ -1,34 +1,15 @@
 package com.sdaproject.api20216146.model;
 
-import javax.persistence.*;
 import java.util.Date;
 
-@Entity
 public class Booking {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  
     private Long id;
-
-    @ManyToOne 
-    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @ManyToOne  
-    @JoinColumn(name = "hotel_room_id", nullable = false)
     private HotelRoom hotelRoom;
-
-    @ManyToOne  
-    @JoinColumn(name = "event_id")
     private Event event;
-
-    @Temporal(TemporalType.TIMESTAMP)  
-    @Column(nullable = false)
     private Date bookingDate;
-
-    @Column(nullable = false)
     private double totalAmount;
-
 
     public Long getId() {
         return id;

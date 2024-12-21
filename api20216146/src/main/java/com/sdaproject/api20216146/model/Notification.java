@@ -1,30 +1,18 @@
 package com.sdaproject.api20216146.model;
 
-import javax.persistence.*;
-
-@Entity
 public class Notification {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false) 
-    private User user;
-
+    private Long userId; // Storing user ID directly instead of linking to a User object
     private String message;
-    
-    @Enumerated(EnumType.STRING) 
     private NotificationType type;
-    
     private boolean sent;
 
     public Notification() {
     }
 
-    public Notification(User user, String message, NotificationType type, boolean sent) {
-        this.user = user;
+    public Notification(Long userId, String message, NotificationType type, boolean sent) {
+        this.userId = userId;
         this.message = message;
         this.type = type;
         this.sent = sent;
@@ -38,12 +26,12 @@ public class Notification {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getMessage() {

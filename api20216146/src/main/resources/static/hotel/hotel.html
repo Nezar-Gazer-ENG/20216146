@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hotels - Travel Booking App</title>
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+<header>
+  <nav class="navbar">
+    <div class="logo">
+      <a href="../index.html">TravelBooking</a>
+    </div>
+    <ul class="nav-links">
+      <li><a href="./hotel.html" class="active">Hotels</a></li>
+      <li><a href="#">Events</a></li>
+      <li><a href="#">Bookings</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero hero-small">
+  <div class="hero-content">
+    <h1>Find Your Perfect Hotel Room</h1>
+    <p>Choose from single, double, or family rooms at amazing prices.</p>
+  </div>
+</section>
+
+<section class="content">
+  <h2>Search Rooms</h2>
+  <div class="search-form">
+    <label for="roomTypeSelect">Room Type:</label>
+    <select id="roomTypeSelect">
+      <option value="">All</option>
+      <option value="Single">Single</option>
+      <option value="Double">Double</option>
+      <option value="Family">Family</option>
+    </select>
+    <button id="searchRoomsBtn" class="primary-btn">Search</button>
+  </div>
+
+  <div id="roomsContainer" class="rooms-container"></div>
+</section>
+
+<footer>
+  <div class="footer-content">
+    <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    <div class="social-links">
+      <a href="#">Facebook</a> | 
+      <a href="#">Instagram</a> | 
+      <a href="#">Twitter</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../script.js"></script>
+</body>
+</html>
