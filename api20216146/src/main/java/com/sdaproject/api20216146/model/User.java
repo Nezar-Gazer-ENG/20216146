@@ -8,8 +8,11 @@ public class User {
     private String email;
     private String phoneNumber;
     private String password;
+    private String otp; 
+    private boolean isVerified; 
 
     public User() {
+        this.isVerified = false; 
     }
 
     public User(String name, String username, String email, String phoneNumber, String password) {
@@ -18,6 +21,7 @@ public class User {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.password = password;
+        this.isVerified = false;
     }
 
     public Long getId() {
@@ -66,5 +70,21 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+
+    public void setOtp(String otp) {
+        this.otp = otp;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(boolean isVerified) {
+        this.isVerified = isVerified;
     }
 }

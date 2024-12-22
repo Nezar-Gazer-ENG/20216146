@@ -50,4 +50,22 @@ public class EventService {
         }
         return "Event not found";
     }
+
+    public String bookEvent(Long id, int quantity) {
+        Event event = getEvent(id);
+        if (event == null) {
+            throw new RuntimeException("Event not found");
+        }
+
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Invalid quantity");
+        }
+
+        if (event.getSeatsAvailable() >= quantity) {
+            event.setSeatsAvailable(event.getSeatsAvailable() - quantity);
+            return "Event booked successfully";
+        } else {
+            throw new RuntimeException("Not enough seats available");
+        }
+    }
 }

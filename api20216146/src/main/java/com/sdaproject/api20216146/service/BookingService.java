@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -28,6 +30,8 @@ public class BookingService {
             booking.setId(bookingIdCounter++);
             booking.setUser(user);
             booking.setHotelRoom(hotelRoom);
+            booking.setCheckInDate(checkInDate);
+            booking.setCheckOutDate(checkOutDate);
             booking.setBookingDate(new Date());
             booking.setTotalAmount(calculateHotelBookingAmount(hotelRoom, checkInDate, checkOutDate));
 
@@ -38,17 +42,19 @@ public class BookingService {
         }
     }
 
-    public Booking bookEvent(Long userId, Long eventId) {
+    public Booking bookEvent(Long userId, Long eventId, int quantity) {
         User user = findUserById(userId);
         Event event = findEventById(eventId);
 
-        if (isEventAvailable(event)) {
+        if (isEventAvailable(event, quantity)) {
             Booking booking = new Booking();
             booking.setId(bookingIdCounter++);
             booking.setUser(user);
             booking.setEvent(event);
             booking.setBookingDate(new Date());
-            booking.setTotalAmount(calculateEventBookingAmount(event));
+            booking.setTotalAmount(calculateEventBookingAmount(event, quantity));
+
+            event.setSeatsAvailable(event.getSeatsAvailable() - quantity);
 
             bookings.add(booking);
             return booking;
@@ -60,20 +66,22 @@ public class BookingService {
     private boolean isRoomAvailable(HotelRoom hotelRoom, Date checkInDate, Date checkOutDate) {
         return bookings.stream()
                 .filter(booking -> booking.getHotelRoom() != null && booking.getHotelRoom().equals(hotelRoom))
-                .noneMatch(booking -> !checkInDate.after(booking.getBookingDate()) && !checkOutDate.before(booking.getBookingDate()));
+                .noneMatch(booking -> 
+                        !(checkOutDate.before(booking.getCheckInDate()) || checkInDate.after(booking.getCheckOutDate())));
     }
 
-    private boolean isEventAvailable(Event event) {
-        return event.getAvailableTickets() > 0;
+    private boolean isEventAvailable(Event event, int quantity) {
+        return event.getSeatsAvailable() >= quantity;
     }
 
     private double calculateHotelBookingAmount(HotelRoom hotelRoom, Date checkInDate, Date checkOutDate) {
-        long duration = (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24); // days
-        return hotelRoom.getPricePerNight() * duration;
+        long durationInMillis = checkOutDate.getTime() - checkInDate.getTime();
+        long days = TimeUnit.DAYS.convert(durationInMillis, TimeUnit.MILLISECONDS);
+        return hotelRoom.getPricePerNight() * (days > 0 ? days : 1);
     }
 
-    private double calculateEventBookingAmount(Event event) {
-        return event.getTicketPrice();
+    private double calculateEventBookingAmount(Event event, int quantity) {
+        return event.getTicketPrice() * quantity;
     }
 
     public Booking createBooking(Booking booking) {
@@ -93,12 +101,25 @@ public class BookingService {
         return new ArrayList<>(bookings);
     }
 
+    public List<Booking> getAllBookingsForUser(Long userId) {
+        return bookings.stream()
+                .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
+                .collect(Collectors.toList());
+    }
+
+    public List<Booking> getBookingsByUserId(Long userId) {
+        return bookings.stream()
+                .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
+                .toList();
+    }
+
     public Booking updateBooking(Long id, Booking updatedBooking) {
         Booking booking = getBooking(id);
         booking.setUser(updatedBooking.getUser());
         booking.setHotelRoom(updatedBooking.getHotelRoom());
         booking.setEvent(updatedBooking.getEvent());
-        booking.setBookingDate(updatedBooking.getBookingDate());
+        booking.setCheckInDate(updatedBooking.getCheckInDate());
+        booking.setCheckOutDate(updatedBooking.getCheckOutDate());
         booking.setTotalAmount(updatedBooking.getTotalAmount());
         return booking;
     }

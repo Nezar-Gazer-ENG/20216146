@@ -30,12 +30,6 @@
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
         }
 
-        .event-card img {
-            max-width: 100%;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
         .event-card h3 {
             margin: 10px 0;
             font-size: 1.5rem;
@@ -55,10 +49,40 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 5px;
         }
 
         .event-card button:hover {
             background-color: #0056b3;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+        }
+
+        .delete-button:hover {
+            background-color: #a71d2a;
+        }
+
+        .add-event {
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .add-event button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-event button:hover {
+            background-color: #218838;
         }
     </style>
 </head>
@@ -69,14 +93,18 @@
             <a href="../index.html">TravelBooking</a>
         </div>
         <ul class="nav-links">
-            <li><a href="/hotel.html">Hotels</a></li>
-            <li><a href="/events.html">Events</a></li>
+            <li><a href="./booking/hotel.html">Hotels</a></li>
+            <li><a href="./booking/events.html">Events</a></li>
             <li><a href="#" id="bookingsBtn">Bookings</a></li>
         </ul>
     </nav>
 </header>
 
 <section class="content">
+    <div class="add-event">
+        <button onclick="window.location.href='./events/AddEvent.html'">Add Event</button>
+    </div>
+    
     <h2 style="text-align: center; margin-top: 30px;">Explore Local Events</h2>
     <div class="event-container" id="eventsContainer">
     </div>
@@ -101,14 +129,25 @@
                 const eventCard = document.createElement('div');
                 eventCard.className = 'event-card';
 
+                let buttonHTML;
+                if (event.seatsAvailable > 0) {
+                    buttonHTML = `<button onclick="redirectToBooking(${event.id})">Book</button>`;
+                } else {
+                    buttonHTML = `<button disabled style="background-color: #ccc; cursor: not-allowed;">Sold Out</button>`;
+                }
+
                 eventCard.innerHTML = `
-                    <img src="${event.imageUrl}" alt="${event.name}" />
                     <h3>${event.name}</h3>
                     <p>${event.description}</p>
                     <p><strong>Date:</strong> ${event.date}</p>
                     <p><strong>Location:</strong> ${event.location}</p>
                     <p><strong>Price:</strong> $${event.price}</p>
-                    <button onclick="bookEvent(${event.id})">Book Now</button>
+                    <p><strong>Available Seats:</strong> ${event.seatsAvailable}</p>
+                    <div>
+                        <button onclick="redirectToEdit(${event.id})">Edit</button>
+                        ${buttonHTML}
+                        <button class="delete-button" onclick="deleteEvent(${event.id})">Delete</button>
+                    </div>
                 `;
 
                 eventsContainer.appendChild(eventCard);
@@ -118,31 +157,38 @@
         }
     }
 
-    async function bookEvent(eventId) {
-        try {
-            const response = await fetch('/auth/me');
-            if (!response.ok) {
-                alert('Please log in to book an event.');
-                window.location.href = '/login.html';
-                return;
-            }
+    function redirectToEdit(eventId) {
+        window.location.href = `./events/EditEvent.html?id=${eventId}`;
+    }
 
-            const bookingResponse = await fetch(`/events/book/${eventId}`, {
-                method: 'POST'
+    function redirectToBooking(eventId) {
+        window.location.href = `./events/BookEvent.html?id=${eventId}`;
+    }
+
+    async function deleteEvent(eventId) {
+        if (!confirm('Are you sure you want to delete this event?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/events/${eventId}`, {
+                method: 'DELETE',
             });
 
-            if (bookingResponse.ok) {
-                alert('Event booked successfully!');
+            if (response.ok) {
+                alert('Event deleted successfully!');
+                fetchEvents(); // Refresh the event list
             } else {
-                const errorText = await bookingResponse.text();
-                alert(`Error booking event: ${errorText}`);
+                const errorText = await response.text();
+                alert(`Error deleting event: ${errorText}`);
             }
         } catch (err) {
-            alert('An error occurred while booking the event. Please try again later.');
+            alert('An error occurred while deleting the event. Please try again later.');
         }
     }
 
     document.addEventListener('DOMContentLoaded', fetchEvents);
 </script>
+
 </body>
 </html>

@@ -47,11 +47,25 @@ public class UserRepository {
                 .findFirst();
     }
 
+    public Optional<User> findByEmail(String email) {
+        return users.stream()
+                .filter(u -> u.getEmail().equalsIgnoreCase(email))
+                .findFirst();
+    }
+
     public boolean usernameExists(String username) {
         return users.stream().anyMatch(u -> u.getUsername().equalsIgnoreCase(username));
     }
 
     public boolean emailExists(String email) {
         return users.stream().anyMatch(u -> u.getEmail().equalsIgnoreCase(email));
+    }
+
+    public boolean existsByUsername(String username) {
+        return usernameExists(username);
+    }
+
+    public boolean existsByEmail(String email) {
+        return emailExists(email);
     }
 }

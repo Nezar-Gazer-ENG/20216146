@@ -18,13 +18,32 @@ public class BookingController {
     private BookingService bookingService;
 
     @GetMapping
-    public List<Booking> getAllBookings() {
-        return bookingService.getAllBookings();
+    public ResponseEntity<List<Booking>> getAllBookings(HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(401).body(null);
+        }
+    
+        List<Booking> userBookings = bookingService.getAllBookingsForUser(loggedInUser.getId());
+        System.out.println("User ID: " + loggedInUser.getId() + ", Bookings: " + userBookings); // Debugging
+        return ResponseEntity.ok(userBookings);
     }
+    
+    
 
     @GetMapping("/{id}")
-    public Booking getBooking(@PathVariable Long id) {
-        return bookingService.getBooking(id);
+    public ResponseEntity<?> getBooking(@PathVariable Long id, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(401).body("You must be logged in to view booking details.");
+        }
+
+        Booking booking = bookingService.getBooking(id);
+        if (booking == null || !booking.getUser().getId().equals(loggedInUser.getId())) {
+            return ResponseEntity.status(404).body("Booking not found or access denied.");
+        }
+
+        return ResponseEntity.ok(booking);
     }
 
     @PostMapping
@@ -33,11 +52,12 @@ public class BookingController {
         if (loggedInUser == null) {
             return ResponseEntity.status(401).body("You must be logged in to book.");
         }
-
-        booking.setUser(loggedInUser);
+    
+        booking.setUser(loggedInUser); 
         Booking createdBooking = bookingService.createBooking(booking);
         return ResponseEntity.ok(createdBooking);
     }
+    
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateBooking(@PathVariable Long id, @RequestBody Booking updatedBooking, HttpSession session) {
@@ -46,10 +66,12 @@ public class BookingController {
             return ResponseEntity.status(401).body("You must be logged in to update a booking.");
         }
 
-        Booking result = bookingService.updateBooking(id, updatedBooking);
-        if (result == null) {
-            return ResponseEntity.status(404).body("Booking not found");
+        Booking existingBooking = bookingService.getBooking(id);
+        if (existingBooking == null || !existingBooking.getUser().getId().equals(loggedInUser.getId())) {
+            return ResponseEntity.status(404).body("Booking not found or access denied.");
         }
+
+        Booking result = bookingService.updateBooking(id, updatedBooking);
         return ResponseEntity.ok(result);
     }
 
@@ -60,11 +82,12 @@ public class BookingController {
             return ResponseEntity.status(401).body("You must be logged in to delete a booking.");
         }
 
-        String message = bookingService.deleteBooking(id);
-        if ("Booking deleted".equals(message)) {
-            return ResponseEntity.ok(message);
-        } else {
-            return ResponseEntity.status(404).body(message);
+        Booking booking = bookingService.getBooking(id);
+        if (booking == null || !booking.getUser().getId().equals(loggedInUser.getId())) {
+            return ResponseEntity.status(404).body("Booking not found or access denied.");
         }
+
+        String message = bookingService.deleteBooking(id);
+        return ResponseEntity.ok(message);
     }
 }

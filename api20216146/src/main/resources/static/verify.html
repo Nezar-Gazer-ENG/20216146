@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Email - Travel Booking App</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.html">TravelBooking</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="./booking/hotel.html">Hotels</a></li>
+            <li><a href="./booking/events.html">Events</a></li>
+            <li><a href="/login.html">Login</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2>Email Verification</h2>
+    <p>Enter the OTP sent to your email to verify your account.</p>
+    <form id="verifyOtpForm" class="auth-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" readonly />
+
+        <label for="otp">OTP:</label>
+        <input type="text" id="otp" placeholder="Enter OTP" required />
+
+        <button type="submit" class="primary-btn">Verify</button>
+    </form>
+    <p>Didn't receive an email? <a href="#" id="resendOtpLink">Resend OTP</a></p>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    // Extract the email from the query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+
+    if (!email) {
+        alert("No email provided. Redirecting to signup.");
+        window.location.href = '/signup.html';
+    } else {
+        document.getElementById('email').value = email;
+    }
+
+    document.getElementById('verifyOtpForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const otp = document.getElementById('otp').value.trim();
+
+        if (!otp) {
+            alert("Please enter the OTP.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/auth/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, otp: otp }),
+            });
+
+            if (response.ok) {
+                alert('Email verified successfully!');
+                window.location.href = '/login.html';
+            } else {
+                const errorText = await response.text();
+                alert(`Verification failed: ${errorText}`);
+            }
+        } catch (err) {
+            alert(`Error during verification: ${err.message}`);
+        }
+    });
+
+    document.getElementById('resendOtpLink').addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch('/auth/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email }),
+            });
+
+            if (response.ok) {
+                alert('A new OTP has been sent to your email.');
+            } else {
+                const errorText = await response.text();
+                alert(`Failed to resend OTP: ${errorText}`);
+            }
+        } catch (err) {
+            alert(`Error resending OTP: ${err.message}`);
+        }
+    });
+</script>
+</body>
+</html>

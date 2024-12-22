@@ -12,6 +12,11 @@
         <div class="logo">
             <a href="index.html">TravelBooking</a>
         </div>
+        <ul class="nav-links">
+            <li><a href="/hotel.html">Hotels</a></li>
+            <li><a href="/events.html">Events</a></li>
+            <li><a href="/view_bookings.html">Bookings</a></li>
+        </ul>
     </nav>
 </header>
 
@@ -42,55 +47,59 @@
 </footer>
 
 <script>
-    const queryParams = new URLSearchParams(window.location.search);
-    const hotelId = queryParams.get('hotelId');
+    document.addEventListener('DOMContentLoaded', async () => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const hotelId = queryParams.get('hotelId');
 
-    async function fetchHotelDetails() {
+        if (!hotelId) {
+            alert('No hotel selected for editing.');
+            window.location.href = '/hotel.html';
+            return;
+        }
+
         try {
-            const response = await fetch(`/hotels/${hotelId}`);
+            const response = await fetch(`/hotelrooms/${hotelId}`);
             if (response.ok) {
                 const hotel = await response.json();
-
                 document.getElementById('name').value = hotel.name;
                 document.getElementById('roomType').value = hotel.roomType;
                 document.getElementById('price').value = hotel.pricePerNight;
             } else {
-                alert('Error fetching hotel details.');
+                alert('Hotel not found.');
                 window.location.href = '/hotel.html';
             }
         } catch (err) {
             console.error('Error fetching hotel details:', err);
-            alert('An error occurred. Please try again later.');
         }
-    }
+    });
 
     document.getElementById('editHotelForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const queryParams = new URLSearchParams(window.location.search);
+        const hotelId = queryParams.get('hotelId');
 
         const name = document.getElementById('name').value.trim();
         const roomType = document.getElementById('roomType').value;
         const price = document.getElementById('price').value;
 
         try {
-            const response = await fetch(`/hotels/${hotelId}`, {
+            const response = await fetch(`/hotelrooms/${hotelId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, roomType, pricePerNight: price })
+                body: JSON.stringify({ name, roomType, pricePerNight: parseFloat(price) })
             });
 
             if (response.ok) {
                 alert('Hotel updated successfully.');
-                window.location.href = '/hotel.html';
+                window.location.href = '../hotel.html';
             } else {
                 alert('Error updating hotel.');
             }
         } catch (err) {
             console.error('Error updating hotel:', err);
-            alert('An error occurred. Please try again later.');
         }
     });
-
-    document.addEventListener('DOMContentLoaded', fetchHotelDetails);
 </script>
 </body>
 </html>

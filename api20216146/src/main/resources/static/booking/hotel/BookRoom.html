@@ -37,45 +37,61 @@
 </footer>
 
 <script>
-    const queryParams = new URLSearchParams(window.location.search);
-    const hotelId = queryParams.get('hotelId');
-    const pricePerNight = 100; // Replace with actual value fetched from backend
+const queryParams = new URLSearchParams(window.location.search);
+const hotelId = queryParams.get('hotelId');
+let pricePerNight = 0;
 
-    document.getElementById('checkOut').addEventListener('change', calculateCost);
-
-    function calculateCost() {
-        const checkIn = new Date(document.getElementById('checkIn').value);
-        const checkOut = new Date(document.getElementById('checkOut').value);
-
-        if (checkIn && checkOut && checkOut > checkIn) {
-            const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-            document.getElementById('totalCost').textContent = `Total Cost: $${nights * pricePerNight}`;
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch(`/hotelrooms/${hotelId}`);
+        if (response.ok) {
+            const hotel = await response.json();
+            pricePerNight = hotel.pricePerNight; // Set the actual price per night
+        } else {
+            alert('Error fetching hotel details.');
+            window.location.href = '/hotel.html';
         }
+    } catch (err) {
+        console.error('Error fetching hotel details:', err);
     }
+});
 
-    document.getElementById('bookRoomForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+document.getElementById('checkOut').addEventListener('change', calculateCost);
 
-        const checkIn = document.getElementById('checkIn').value;
-        const checkOut = document.getElementById('checkOut').value;
+function calculateCost() {
+    const checkIn = new Date(document.getElementById('checkIn').value);
+    const checkOut = new Date(document.getElementById('checkOut').value);
 
-        try {
-            const response = await fetch(`/bookings`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ hotelId, checkIn, checkOut })
-            });
+    if (checkIn && checkOut && checkOut > checkIn) {
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        document.getElementById('totalCost').textContent = `Total Cost: $${(nights * pricePerNight).toFixed(2)}`;
+    }
+}
 
-            if (response.ok) {
-                alert('Booking confirmed.');
-                window.location.href = '/view_bookings.html';
-            } else {
-                alert('Error booking room.');
-            }
-        } catch (err) {
-            console.error('Error booking room:', err);
+document.getElementById('bookRoomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const checkIn = document.getElementById('checkIn').value;
+    const checkOut = document.getElementById('checkOut').value;
+
+    try {
+        const response = await fetch(`/bookings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hotelId, checkIn, checkOut })
+        });
+
+        if (response.ok) {
+            alert('Booking confirmed.');
+            window.location.href = '../view_bookings.html';
+        } else {
+            alert('Error booking room.');
         }
-    });
+    } catch (err) {
+        console.error('Error booking room:', err);
+    }
+});
+
 </script>
 </body>
 </html>

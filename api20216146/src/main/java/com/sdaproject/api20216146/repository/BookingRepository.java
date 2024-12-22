@@ -17,24 +17,24 @@ public class BookingRepository {
     private long currentId = 1L;
 
     public Booking save(Booking booking) {
+        System.out.println("Saving booking: " + booking);
         if (booking.getId() == null) {
             booking.setId(currentId++);
             bookings.add(booking);
         } else {
-            boolean found = false;
             for (int i = 0; i < bookings.size(); i++) {
                 if (bookings.get(i).getId().equals(booking.getId())) {
                     bookings.set(i, booking);
-                    found = true;
-                    break;
+                    System.out.println("Updated booking: " + booking); 
+                    return booking;
                 }
             }
-            if (!found) {
-                bookings.add(booking);
-            }
+            bookings.add(booking);
         }
+        System.out.println("Booking saved: " + booking);
         return booking;
     }
+    
 
     public Optional<Booking> findById(Long id) {
         return bookings.stream()
@@ -62,9 +62,12 @@ public class BookingRepository {
     }
 
     public List<Booking> findByUserId(Long userId) {
-        return bookings.stream()
-                .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
-                .collect(Collectors.toList());
+        System.out.println("Finding bookings for userId: " + userId);
+        List<Booking> result = bookings.stream()
+            .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
+            .collect(Collectors.toList());
+        System.out.println("Found bookings: " + result);
+        return result;
     }
 
     public List<Booking> findByHotelRoomAndDateRange(HotelRoom hotelRoom, Date checkInDate, Date checkOutDate) {

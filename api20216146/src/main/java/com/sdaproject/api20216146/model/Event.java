@@ -6,21 +6,11 @@ public class Event {
 
     private Long id;
     private String name;
-    private String location;
-    private LocalDate eventDate;
     private String description;
+    private LocalDate eventDate;
+    private String location;
     private double ticketPrice;
-
-    public Event() {
-    }
-
-    public Event(String name, String location, LocalDate eventDate, String description, double ticketPrice) {
-        this.name = name;
-        this.location = location;
-        this.eventDate = eventDate;
-        this.description = description;
-        this.ticketPrice = ticketPrice;
-    }
+    private int seatsAvailable; 
 
     public Long getId() {
         return id;
@@ -38,12 +28,12 @@ public class Event {
         this.name = name;
     }
 
-    public String getLocation() {
-        return location;
+    public String getDescription() {
+        return description;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalDate getEventDate() {
@@ -54,12 +44,12 @@ public class Event {
         this.eventDate = eventDate;
     }
 
-    public String getDescription() {
-        return description;
+    public String getLocation() {
+        return location;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public double getTicketPrice() {
@@ -70,11 +60,11 @@ public class Event {
         this.ticketPrice = ticketPrice;
     }
 
-    public boolean isAvailable() {
-        return true;
+    public int getSeatsAvailable() {
+        return seatsAvailable;
     }
 
-    public int getAvailableTickets() {
-        return 100;
+    public void setSeatsAvailable(int seatsAvailable) {
+        this.seatsAvailable = seatsAvailable;
     }
 }

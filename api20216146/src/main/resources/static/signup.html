@@ -80,8 +80,8 @@
             });
 
             if (response.ok) {
-                alert('User created successfully. Redirecting to login page.');
-                window.location.href = '/login.html';
+                alert('User created successfully. An OTP has been sent to your email for verification.');
+                window.location.href = `/verify.html?email=${encodeURIComponent(email)}`;
             } else {
                 const errorText = await response.text();
                 alert(`Sign up failed: ${errorText}`);
