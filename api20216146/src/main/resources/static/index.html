@@ -37,21 +37,23 @@
     </style>
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="index.html">TravelBooking</a>
-        </div>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="./booking/hotel.html">Hotels</a></li>
-            <li><a href="./booking/events.html">Events</a></li>
-            <li id="authLinks">
-                <a href="/signup.html" id="signupLink">Sign Up</a>
-                <a href="/login.html" id="loginLink">Log In</a>
-            </li>
-        </ul>
-    </nav>
-</header>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html">TravelBooking</a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="./booking/hotel.html">Hotels</a></li>
+                <li><a href="./booking/events.html">Events</a></li>
+                <li><a href="./booking/view_bookings.html" id="bookingsLink">Bookings</a></li> 
+                <li id="authLinks">
+                    <a href="/signup.html" id="signupLink">Sign Up</a>
+                    <a href="/login.html" id="loginLink">Log In</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    
 
 <section class="hero">
     <div class="hero-content">
@@ -95,45 +97,52 @@
 </footer>
 
 <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const response = await fetch('/auth/me');
-            const callToAction = document.getElementById('callToAction');
-            const authLinks = document.getElementById('authLinks');
-            if (response.ok) {
-                const user = await response.json();
-                authLinks.innerHTML = `
-                    <div class="dropdown">
-                        <a href="#" id="userMenu">${user.username}</a>
-                        <div class="dropdown-content">
-                            <a href="/profile.html">Edit Profile</a>
-                            <a href="#" id="logout">Log Out</a>
-                        </div>
+document.addEventListener('DOMContentLoaded', async () => {
+    let isLoggedIn = false;
+
+    try {
+        const response = await fetch('/auth/me');
+        const authLinks = document.getElementById('authLinks');
+        const bookingsLink = document.getElementById('bookingsLink');
+        
+        if (response.ok) {
+            const user = await response.json();
+            isLoggedIn = true;
+            authLinks.innerHTML = `
+                <div class="dropdown">
+                    <a href="#" id="userMenu">${user.username}</a>
+                    <div class="dropdown-content">
+                        <a href="/profile.html">Edit Profile</a>
+                        <a href="#" id="logout">Log Out</a>
                     </div>
-                `;
-                const logout = document.getElementById('logout');
-                logout.addEventListener('click', async () => {
-                    const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
-                    if (logoutResponse.ok) {
-                        alert('You have been logged out.');
-                        window.location.reload();
-                    } else {
-                        alert('Error during logout.');
-                    }
-                });
-                if (callToAction) {
-                    callToAction.style.display = 'none';
+                </div>
+            `;
+
+            bookingsLink.href = "./booking/view_bookings.html"; 
+            const logout = document.getElementById('logout');
+            logout.addEventListener('click', async () => {
+                const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
+                if (logoutResponse.ok) {
+                    alert('You have been logged out.');
+                    window.location.reload();
+                } else {
+                    alert('Error during logout.');
                 }
-            } else {
-                authLinks.innerHTML = `
-                    <a href="/signup.html" id="signupLink">Sign Up</a>
-                    <a href="/login.html" id="loginLink">Log In</a>
-                `;
-            }
-        } catch (err) {
-            console.error('Error checking login status:', err);
+            });
+        } else {
+            bookingsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('You must log in first to view bookings.');
+            });
+            authLinks.innerHTML = `
+                <a href="/signup.html" id="signupLink">Sign Up</a>
+                <a href="/login.html" id="loginLink">Log In</a>
+            `;
         }
-    });
+    } catch (err) {
+        console.error('Error checking login status:', err);
+    }
+});
 </script>
 </body>
 </html>

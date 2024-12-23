@@ -5,93 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Book Room - Travel Booking App</title>
     <link rel="stylesheet" href="/styles.css" />
+    <style>
+        /* Styles remain unchanged */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .room-details {
+            margin-bottom: 20px;
+        }
+
+        .room-details p {
+            margin: 5px 0;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #007BFF;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="index.html">TravelBooking</a>
+    <div class="container">
+        <h2>Book Room</h2>
+        <div class="room-details" id="roomDetails">
         </div>
-    </nav>
-</header>
-
-<section class="content">
-    <h2 style="text-align: center; margin-top: 30px;">Book Room</h2>
-    <form id="bookRoomForm" style="max-width: 600px; margin: 30px auto;">
-        <label for="checkIn">Check-in Date:</label>
-        <input type="date" id="checkIn" required />
-
-        <label for="checkOut">Check-out Date:</label>
-        <input type="date" id="checkOut" required />
-
-        <p id="totalCost" style="text-align: center; margin: 20px 0;">Total Cost: $0</p>
-
-        <button type="submit" class="primary-btn">Confirm Booking</button>
-    </form>
-</section>
-
-<footer>
-    <div class="footer-content">
-        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+        <form id="bookRoomForm">
+            <div>
+                <label for="checkIn">Check-in Date</label>
+                <input type="date" id="checkIn" name="checkIn" required />
+            </div>
+            <div>
+                <label for="checkOut">Check-out Date</label>
+                <input type="date" id="checkOut" name="checkOut" required />
+            </div>
+            <p id="totalCost" style="text-align: center; margin: 20px 0;">Total Cost: $0</p>
+            <button type="submit">Book Room</button>
+        </form>
+        <a href="/booking/hotel.html" class="back-link">Back to Hotels</a>
     </div>
-</footer>
 
-<script>
-const queryParams = new URLSearchParams(window.location.search);
-const hotelId = queryParams.get('hotelId');
-let pricePerNight = 0;
-
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await fetch(`/hotelrooms/${hotelId}`);
-        if (response.ok) {
-            const hotel = await response.json();
-            pricePerNight = hotel.pricePerNight; // Set the actual price per night
-        } else {
-            alert('Error fetching hotel details.');
-            window.location.href = '/hotel.html';
+    <script>
+        const queryParams = new URLSearchParams(window.location.search);
+        const hotelId = queryParams.get('hotelId');
+        let pricePerNight = 0;
+    
+        async function fetchRoomDetails() {
+            try {
+                const response = await fetch(`/hotelrooms/${hotelId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch room details');
+                }
+    
+                const hotel = await response.json();
+                pricePerNight = hotel.pricePerNight;
+    
+                const roomDetailsDiv = document.getElementById('roomDetails');
+                roomDetailsDiv.innerHTML = `
+                    <p><strong>Hotel Name:</strong> ${hotel.name}</p>
+                    <p><strong>Room Type:</strong> ${hotel.roomType}</p>
+                    <p><strong>Price per Night:</strong> $${hotel.pricePerNight.toFixed(2)}</p>
+                `;
+            } catch (error) {
+                console.error('Error fetching room details:', error);
+                alert('An error occurred while fetching room details.');
+                window.location.href = '/booking/hotel.html';
+            }
         }
-    } catch (err) {
-        console.error('Error fetching hotel details:', err);
-    }
-});
+    
+        function validateDates(checkInDate, checkOutDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+    
+            const checkIn = new Date(checkInDate);
+            const checkOut = new Date(checkOutDate);
+    
+            if (checkIn < today || checkOut < today) {
+                alert('Check-in and check-out dates cannot be in the past.');
+                return false;
+            }
+    
+            if (checkIn >= checkOut) {
+                alert('Check-out date must be after the check-in date.');
+                return false;
+            }
+    
+            return true;
+        }
+    
+        function calculateCost() {
+            const checkIn = new Date(document.getElementById('checkIn').value);
+            const checkOut = new Date(document.getElementById('checkOut').value);
+    
+            if (checkIn && checkOut && checkOut > checkIn) {
+                const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                document.getElementById('totalCost').textContent = `Total Cost: $${(nights * pricePerNight).toFixed(2)}`;
+            } else {
+                document.getElementById('totalCost').textContent = 'Total Cost: $0';
+            }
+        }
+    
+        document.getElementById('checkOut').addEventListener('change', calculateCost);
+    
+        document.getElementById('bookRoomForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+    
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+    
+            if (!validateDates(checkIn, checkOut)) {
+                return;
+            }
+    
+            try {
+                const authResponse = await fetch(`/auth/me`);
+                if (!authResponse.ok) {
+                    alert('Please log in to book a room.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                const loggedInUser = await authResponse.json();
 
-document.getElementById('checkOut').addEventListener('change', calculateCost);
-
-function calculateCost() {
-    const checkIn = new Date(document.getElementById('checkIn').value);
-    const checkOut = new Date(document.getElementById('checkOut').value);
-
-    if (checkIn && checkOut && checkOut > checkIn) {
-        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-        document.getElementById('totalCost').textContent = `Total Cost: $${(nights * pricePerNight).toFixed(2)}`;
-    }
-}
-
-document.getElementById('bookRoomForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const checkIn = document.getElementById('checkIn').value;
-    const checkOut = document.getElementById('checkOut').value;
-
-    try {
-        const response = await fetch(`/bookings`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ hotelId, checkIn, checkOut })
+                const bookingResponse = await fetch(`/bookings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: loggedInUser.id,
+                        hotelRoom: { id: hotelId },
+                        checkInDate: checkIn,
+                        checkOutDate: checkOut,
+                    }),
+                });
+    
+                if (bookingResponse.ok) {
+                    alert('Room booked successfully!');
+                    window.location.href = '../view_bookings.html';
+                } else {
+                    const errorResponse = await bookingResponse.json();
+                    alert(`Error booking room: ${errorResponse.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error booking room:', error);
+                alert('An error occurred. Please try again later.');
+            }
         });
-
-        if (response.ok) {
-            alert('Booking confirmed.');
-            window.location.href = '../view_bookings.html';
-        } else {
-            alert('Error booking room.');
-        }
-    } catch (err) {
-        console.error('Error booking room:', err);
-    }
-});
-
-</script>
+    
+        document.addEventListener('DOMContentLoaded', () => {
+            if (hotelId) {
+                fetchRoomDetails();
+            } else {
+                alert('No hotel ID provided.');
+                window.location.href = '/booking/hotel.html';
+            }
+        });
+    </script>
 </body>
 </html>

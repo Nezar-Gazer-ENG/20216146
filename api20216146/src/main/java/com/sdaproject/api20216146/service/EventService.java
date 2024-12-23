@@ -1,71 +1,85 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.Event;
+import com.sdaproject.api20216146.repository.EventRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class EventService {
 
-    private final List<Event> events = new ArrayList<>();
-    private long eventIdCounter = 1;
+    @Autowired
+    private EventRepository eventRepository;
 
     public Event createEvent(Event event) {
-        event.setId(eventIdCounter++);
-        events.add(event);
-        return event;
+        validateEvent(event);
+        return eventRepository.save(event);
     }
 
     public Event getEvent(Long id) {
-        return events.stream()
-                .filter(event -> event.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
     }
 
     public List<Event> getAllEvents() {
-        return new ArrayList<>(events);
+        return eventRepository.findAll();
     }
 
     public Event updateEvent(Long id, Event updatedEvent) {
-        Event event = getEvent(id);
-        if (event != null) {
-            event.setName(updatedEvent.getName());
-            event.setLocation(updatedEvent.getLocation());
-            event.setEventDate(updatedEvent.getEventDate());
-            event.setDescription(updatedEvent.getDescription());
-            event.setTicketPrice(updatedEvent.getTicketPrice());
-            return event;
-        }
-        return null;
+        validateEvent(updatedEvent);
+        return eventRepository.findById(id)
+                .map(existingEvent -> {
+                    existingEvent.setName(updatedEvent.getName());
+                    existingEvent.setLocation(updatedEvent.getLocation());
+                    existingEvent.setEventDate(updatedEvent.getEventDate());
+                    existingEvent.setDescription(updatedEvent.getDescription());
+                    existingEvent.setTicketPrice(updatedEvent.getTicketPrice());
+                    existingEvent.setSeatsAvailable(updatedEvent.getSeatsAvailable());
+                    return eventRepository.save(existingEvent);
+                })
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
     }
 
     public String deleteEvent(Long id) {
-        Event event = getEvent(id);
-        if (event != null) {
-            events.remove(event);
+        if (eventRepository.existsById(id)) {
+            eventRepository.deleteById(id);
             return "Event deleted";
         }
-        return "Event not found";
+        throw new RuntimeException("Event not found with id: " + id);
     }
 
     public String bookEvent(Long id, int quantity) {
-        Event event = getEvent(id);
-        if (event == null) {
-            throw new RuntimeException("Event not found");
-        }
-
         if (quantity <= 0) {
-            throw new IllegalArgumentException("Invalid quantity");
+            throw new IllegalArgumentException("Invalid quantity: must be greater than zero");
         }
 
+        Event event = getEvent(id);
         if (event.getSeatsAvailable() >= quantity) {
             event.setSeatsAvailable(event.getSeatsAvailable() - quantity);
+            eventRepository.save(event);
             return "Event booked successfully";
         } else {
-            throw new RuntimeException("Not enough seats available");
+            throw new RuntimeException("Not enough seats available. Available: " + event.getSeatsAvailable());
+        }
+    }
+
+    private void validateEvent(Event event) {
+        if (event.getName() == null || event.getName().isEmpty()) {
+            throw new RuntimeException("Event name is required");
+        }
+        if (event.getLocation() == null || event.getLocation().isEmpty()) {
+            throw new RuntimeException("Event location is required");
+        }
+        if (event.getEventDate() == null) {
+            throw new RuntimeException("Event date is required");
+        }
+        if (event.getTicketPrice() <= 0) {
+            throw new RuntimeException("Event ticket price must be greater than zero");
+        }
+        if (event.getSeatsAvailable() < 0) {
+            throw new RuntimeException("Event seats available cannot be negative");
         }
     }
 }

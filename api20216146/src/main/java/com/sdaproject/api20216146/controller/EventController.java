@@ -16,11 +16,16 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+@PostMapping
+public ResponseEntity<?> createEvent(@RequestBody Event event) {
+    try {
         Event createdEvent = eventService.createEvent(event);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
     }
+}
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEvent(@PathVariable Long id) {
@@ -34,25 +39,36 @@ public class EventController {
     @GetMapping
     public ResponseEntity<List<Event>> getAllEvents() {
         List<Event> events = eventService.getAllEvents();
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
         return ResponseEntity.ok(events);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event updatedEvent) {
-        Event event = eventService.updateEvent(id, updatedEvent);
-        if (event == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        try {
+            Event event = eventService.updateEvent(id, updatedEvent);
+            if (event == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            return ResponseEntity.ok(event);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        return ResponseEntity.ok(event);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteEvent(@PathVariable Long id) {
-        String result = eventService.deleteEvent(id);
-        if ("Event not found".equals(result)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+        try {
+            String result = eventService.deleteEvent(id);
+            if ("Event not found".equals(result)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+            }
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/book/{id}")

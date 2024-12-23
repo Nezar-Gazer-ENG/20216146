@@ -5,6 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hotels - Travel Booking App</title>
     <link rel="stylesheet" href="/styles.css" />
+    <style>
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .logo a {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .logo a:hover {
+            text-decoration: underline;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            color: #007BFF;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            min-width: 160px;
+            border: 1px solid #ddd;
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #007BFF;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .hotel-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .hotel-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .hotel-card h3 {
+            margin: 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .hotel-card p {
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .hotel-card button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        .hotel-card button:hover {
+            background-color: #0056b3;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+        }
+
+        .delete-button:hover {
+            background-color: #a71d2a;
+        }
+
+        .add-hotel {
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .add-hotel button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-hotel button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
 <header>
@@ -12,34 +157,23 @@
         <div class="logo">
             <a href="../index.html">TravelBooking</a>
         </div>
-        <ul class="nav-links">
+        <ul class="nav-links" id="navLinks">
             <li><a href="hotel.html">Hotels</a></li>
             <li><a href="events.html">Events</a></li>
-            <li><a href="/view_bookings.html">Bookings</a></li>
+            <li><a href="view_bookings.html" id="bookingsBtn">Bookings</a></li>
+            <li id="authLinks"></li>
         </ul>
     </nav>
 </header>
 
 <section class="content">
-    <h2 style="text-align: center; margin-top: 30px;">Manage Hotels</h2>
-
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="./hotel/AddHotel.html" class="primary-btn">Add Hotel</a>
+    <div class="add-hotel">
+        <button onclick="window.location.href='./hotel/AddHotel.html'">Add Hotel</button>
     </div>
-
-    <div style="margin-top: 30px; text-align: center;">
-        <input type="text" id="searchName" placeholder="Search by name" style="padding: 8px; width: 200px; margin-right: 10px;" />
-        <select id="filterRoomType" style="padding: 8px; margin-right: 10px;">
-            <option value="">All Room Types</option>
-            <option value="single">Single</option>
-            <option value="double">Double</option>
-            <option value="family">Family</option>
-        </select>
-        <input type="number" id="filterPrice" placeholder="Max Price" style="padding: 8px; width: 150px; margin-right: 10px;" />
-        <button onclick="applyFilters()" class="primary-btn">Apply Filters</button>
+    
+    <h2 style="text-align: center; margin-top: 30px;">Explore Hotels</h2>
+    <div class="hotel-container" id="hotelsContainer">
     </div>
-
-    <div id="hotelsContainer" style="margin-top: 30px;"></div>
 </section>
 
 <footer>
@@ -49,103 +183,110 @@
 </footer>
 
 <script>
-    let allHotels = [];
-
     async function fetchHotels() {
         try {
             const response = await fetch('/hotelrooms');
-            if (response.ok) {
-                allHotels = await response.json();
-                displayHotels(allHotels);
-            } else {
-                alert('Error fetching hotels. Please try again later.');
-            }
+            const hotels = await response.json();
+
+            const hotelsContainer = document.getElementById('hotelsContainer');
+            hotelsContainer.innerHTML = '';
+
+            hotels.forEach(hotel => {
+                const hotelCard = document.createElement('div');
+                hotelCard.className = 'hotel-card';
+
+                hotelCard.innerHTML = `
+                    <h3>${hotel.name}</h3>
+                    <p>${hotel.description}</p>
+                    <p><strong>Room Type:</strong> ${hotel.roomType}</p>
+                    <p><strong>Price per Night:</strong> $${hotel.pricePerNight}</p>
+                    <p><strong>Available Rooms:</strong> ${hotel.roomsAvailable}</p>
+                    <div>
+                        <button onclick="redirectToEdit(${hotel.id})">Edit</button>
+                        <button onclick="redirectToBooking(${hotel.id})">Book</button>
+                        <button class="delete-button" onclick="deleteHotel(${hotel.id})">Delete</button>
+                    </div>
+                `;
+
+                hotelsContainer.appendChild(hotelCard);
+            });
         } catch (err) {
             console.error('Error fetching hotels:', err);
-            alert('An error occurred while fetching hotels.');
         }
     }
 
-    function displayHotels(hotels) {
-        const hotelsContainer = document.getElementById('hotelsContainer');
-        hotelsContainer.innerHTML = '';
-
-        if (hotels.length === 0) {
-            hotelsContainer.innerHTML = '<p>No hotels match your criteria.</p>';
-            return;
-        }
-
-        hotels.forEach(hotel => {
-            const hotelRow = document.createElement('div');
-            hotelRow.style.display = 'flex';
-            hotelRow.style.justifyContent = 'space-between';
-            hotelRow.style.alignItems = 'center';
-            hotelRow.style.padding = '10px';
-            hotelRow.style.borderBottom = '1px solid #ddd';
-
-            hotelRow.innerHTML = `
-                <span>${hotel.name}</span>
-                <span>${hotel.roomType}</span>
-                <span>$${hotel.pricePerNight.toFixed(2)}</span>
-                <button onclick="bookHotel(${hotel.id})">Book</button>
-                <button onclick="editHotel(${hotel.id})">Edit</button>
-                <button onclick="deleteHotel(${hotel.id})">Delete</button>
-            `;
-
-            hotelsContainer.appendChild(hotelRow);
-        });
-    }
-
-    function applyFilters() {
-        const searchName = document.getElementById('searchName').value.toLowerCase();
-        const filterRoomType = document.getElementById('filterRoomType').value;
-        const filterPrice = parseFloat(document.getElementById('filterPrice').value);
-
-        let filteredHotels = allHotels;
-
-        if (searchName) {
-            filteredHotels = filteredHotels.filter(hotel =>
-                hotel.name.toLowerCase().includes(searchName)
-            );
-        }
-
-        if (filterRoomType) {
-            filteredHotels = filteredHotels.filter(hotel => hotel.roomType === filterRoomType);
-        }
-
-        if (!isNaN(filterPrice)) {
-            filteredHotels = filteredHotels.filter(hotel => hotel.pricePerNight <= filterPrice);
-        }
-
-        displayHotels(filteredHotels);
-    }
-
-    async function bookHotel(hotelId) {
-        window.location.href = `./hotel/BookRoom.html?hotelId=${hotelId}`;
-    }
-
-    async function editHotel(hotelId) {
+    function redirectToEdit(hotelId) {
         window.location.href = `./hotel/EditHotel.html?hotelId=${hotelId}`;
     }
 
+    function redirectToBooking(hotelId) {
+        window.location.href = `./hotel/BookRoom.html?hotelId=${hotelId}`;
+    }
+
     async function deleteHotel(hotelId) {
-        if (confirm('Are you sure you want to delete this hotel?')) {
-            try {
-                const response = await fetch(`/hotelrooms/${hotelId}`, { method: 'DELETE' });
-                if (response.ok) {
-                    alert('Hotel deleted successfully.');
-                    fetchHotels();
-                } else {
-                    alert('Error deleting hotel.');
-                }
-            } catch (err) {
-                console.error('Error deleting hotel:', err);
-                alert('An error occurred while deleting the hotel.');
+        if (!confirm('Are you sure you want to delete this hotel?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/hotelrooms/${hotelId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('Hotel deleted successfully!');
+                fetchHotels();
+            } else {
+                const errorText = await response.text();
+                alert(`Error deleting hotel: ${errorText}`);
             }
+        } catch (err) {
+            alert('An error occurred while deleting the hotel. Please try again later.');
         }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchHotels);
+    document.addEventListener('DOMContentLoaded', async () => {
+        fetchHotels();
+
+        const authLinks = document.getElementById('authLinks');
+        const bookingsBtn = document.getElementById('bookingsBtn');
+        try {
+            const response = await fetch('/auth/me');
+            if (response.ok) {
+                const user = await response.json();
+                authLinks.innerHTML = `
+                    <div class="dropdown">
+                        <a href="#" id="userMenu">${user.username}</a>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Edit Profile</a>
+                            <a href="#" id="logout">Log Out</a>
+                        </div>
+                    </div>
+                `;
+                const logout = document.getElementById('logout');
+                logout.addEventListener('click', async () => {
+                    const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
+                    if (logoutResponse.ok) {
+                        alert('You have been logged out.');
+                        window.location.reload();
+                    } else {
+                        alert('Error during logout.');
+                    }
+                });
+            } else {
+                bookingsBtn.addEventListener('click', () => {
+                    alert('You must log in first to view bookings.');
+                });
+                authLinks.innerHTML = `
+                    <a href="/signup.html" id="signupLink">Sign Up</a>
+                    <a href="/login.html" id="loginLink">Log In</a>
+                `;
+            }
+        } catch (err) {
+            console.error('Error checking login status:', err);
+        }
+    });
 </script>
+
 </body>
 </html>

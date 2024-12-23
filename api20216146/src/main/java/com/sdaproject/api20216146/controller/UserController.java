@@ -33,6 +33,10 @@ public class UserController {
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
 
+        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username and password must not be empty");
+        }
+
         User user = userService.findByUsername(username);
         if (user == null || !user.getPassword().equals(password)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
@@ -44,6 +48,11 @@ public class UserController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No user is currently logged in");
+        }
+
         session.invalidate();
         return ResponseEntity.ok("Logged out successfully");
     }
@@ -60,7 +69,8 @@ public class UserController {
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user));
+            User createdUser = userService.createUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }
@@ -77,25 +87,37 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+        List<User> users = userService.getAllUsers();
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        return ResponseEntity.ok(users);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        User user = userService.updateUser(id, updatedUser);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        try {
+            User user = userService.updateUser(id, updatedUser);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        String result = userService.deleteUser(id);
-        if ("User not found".equals(result)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+        try {
+            String result = userService.deleteUser(id);
+            if ("User not found".equals(result)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting user");
         }
-        return ResponseEntity.ok(result);
     }
 
     @PutMapping("/edit")

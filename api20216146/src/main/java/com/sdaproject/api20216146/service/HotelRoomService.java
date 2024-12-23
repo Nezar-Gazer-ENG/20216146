@@ -1,54 +1,66 @@
 package com.sdaproject.api20216146.service;
 
 import com.sdaproject.api20216146.model.HotelRoom;
+import com.sdaproject.api20216146.repository.HotelRoomRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class HotelRoomService {
 
-    private final List<HotelRoom> hotelRooms = new ArrayList<>();
-    private long currentId = 1L;
+    @Autowired
+    private HotelRoomRepository hotelRoomRepository;
 
     public HotelRoom createHotelRoom(HotelRoom hotelRoom) {
-        hotelRoom.setId(currentId++);
-        hotelRooms.add(hotelRoom);
-        return hotelRoom;
+        if (hotelRoom == null || hotelRoom.getPricePerNight() <= 0) {
+            throw new IllegalArgumentException("Invalid hotel room details.");
+        }
+        return hotelRoomRepository.save(hotelRoom);
     }
 
     public HotelRoom getHotelRoom(Long id) {
-        return hotelRooms.stream()
-                .filter(hotelRoom -> hotelRoom.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return hotelRoomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Hotel room not found."));
     }
 
     public List<HotelRoom> getAllHotelRooms() {
-        return new ArrayList<>(hotelRooms);
+        return hotelRoomRepository.findAll();
     }
 
     public HotelRoom updateHotelRoom(Long id, HotelRoom updatedHotelRoom) {
-        Optional<HotelRoom> existingHotelRoomOpt = hotelRooms.stream()
-                .filter(hotelRoom -> hotelRoom.getId().equals(id))
-                .findFirst();
-
-        if (existingHotelRoomOpt.isPresent()) {
-            HotelRoom existingHotelRoom = existingHotelRoomOpt.get();
-            existingHotelRoom.setName(updatedHotelRoom.getName());
-            existingHotelRoom.setRoomType(updatedHotelRoom.getRoomType());
-            existingHotelRoom.setPricePerNight(updatedHotelRoom.getPricePerNight());
-            existingHotelRoom.setAvailable(updatedHotelRoom.isAvailable());
-            return existingHotelRoom;
-        }
-
-        return null;
+        return hotelRoomRepository.findById(id)
+                .map(existingHotelRoom -> {
+                    if (updatedHotelRoom.getName() != null) {
+                        existingHotelRoom.setName(updatedHotelRoom.getName());
+                    }
+                    if (updatedHotelRoom.getRoomType() != null) {
+                        existingHotelRoom.setRoomType(updatedHotelRoom.getRoomType());
+                    }
+                    if (updatedHotelRoom.getPricePerNight() > 0) {
+                        existingHotelRoom.setPricePerNight(updatedHotelRoom.getPricePerNight());
+                    }
+                    existingHotelRoom.setAvailable(updatedHotelRoom.isAvailable());
+                    return hotelRoomRepository.save(existingHotelRoom);
+                })
+                .orElseThrow(() -> new RuntimeException("Hotel room not found for update."));
     }
 
     public String deleteHotelRoom(Long id) {
-        boolean removed = hotelRooms.removeIf(hotelRoom -> hotelRoom.getId().equals(id));
-        return removed ? "Hotel room deleted" : "Hotel room not found";
+        if (hotelRoomRepository.existsById(id)) {
+            hotelRoomRepository.deleteById(id);
+            return "Hotel room deleted";
+        }
+        throw new RuntimeException("Hotel room not found for deletion.");
+    }
+
+    public boolean isRoomAvailable(Long roomId) {
+        Optional<HotelRoom> room = hotelRoomRepository.findById(roomId);
+        if (room.isEmpty() || !room.get().isAvailable()) {
+            throw new RuntimeException("Hotel room is not available.");
+        }
+        return true;
     }
 }

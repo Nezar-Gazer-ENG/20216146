@@ -1,11 +1,30 @@
 package com.sdaproject.api20216146.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+
+@Entity
+@Table(name = "hotel_rooms") 
 public class HotelRoom {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) 
     private Long id;
+
+    @Column(nullable = false, length = 100) 
     private String name;
+
+    @Column(nullable = false, length = 50) 
     private String roomType;
+
+    @Column(nullable = false) 
     private double pricePerNight;
+
+    @Column(nullable = false)
     private boolean available;
 
     public HotelRoom() {
@@ -18,6 +37,7 @@ public class HotelRoom {
         this.available = available;
     }
 
+    // Getters and setters
     public Long getId() {
         return id;
     }

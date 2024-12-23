@@ -1,18 +1,42 @@
 package com.sdaproject.api20216146.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+
+@Entity
+@Table(name = "users")
 public class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String phoneNumber;
+
+    @Column(nullable = false)
     private String password;
-    private String otp; 
-    private boolean isVerified; 
+
+    private String otp;
+
+    @Column(nullable = false)
+    private boolean isVerified;
 
     public User() {
-        this.isVerified = false; 
+        this.isVerified = false;
     }
 
     public User(String name, String username, String email, String phoneNumber, String password) {

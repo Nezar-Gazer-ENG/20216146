@@ -84,6 +84,35 @@
         .add-event button:hover {
             background-color: #218838;
         }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -92,10 +121,14 @@
         <div class="logo">
             <a href="../index.html">TravelBooking</a>
         </div>
-        <ul class="nav-links">
-            <li><a href="./booking/hotel.html">Hotels</a></li>
-            <li><a href="./booking/events.html">Events</a></li>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="hotel.html">Hotels</a></li>
+            <li><a href="events.html">Events</a></li>
             <li><a href="#" id="bookingsBtn">Bookings</a></li>
+            <li id="authLinks">
+                <a href="/signup.html" id="signupLink">Sign Up</a>
+                <a href="/login.html" id="loginLink">Log In</a>
+            </li>
         </ul>
     </nav>
 </header>
@@ -187,7 +220,50 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchEvents);
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('/auth/me');
+            const authLinks = document.getElementById('authLinks');
+            const bookingsBtn = document.getElementById('bookingsBtn');
+
+            if (response.ok) {
+                const user = await response.json();
+                authLinks.innerHTML = `
+                    <div class="dropdown">
+                        <a href="#" id="userMenu">${user.username}</a>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Edit Profile</a>
+                            <a href="#" id="logout">Log Out</a>
+                        </div>
+                    </div>
+                `;
+
+                bookingsBtn.href = "./view_bookings.html";
+                const logout = document.getElementById('logout');
+                logout.addEventListener('click', async () => {
+                    const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
+                    if (logoutResponse.ok) {
+                        alert('You have been logged out.');
+                        window.location.reload();
+                    } else {
+                        alert('Error during logout.');
+                    }
+                });
+            } else {
+                bookingsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert('You must log in first to view bookings.');
+                });
+                authLinks.innerHTML = `
+                    <a href="/signup.html" id="signupLink">Sign Up</a>
+                    <a href="/login.html" id="loginLink">Log In</a>
+                `;
+            }
+        } catch (err) {
+            console.error('Error checking login status:', err);
+        }
+        fetchEvents();
+    });
 </script>
 
 </body>

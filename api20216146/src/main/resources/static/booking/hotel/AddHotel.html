@@ -5,76 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Hotel - Travel Booking App</title>
     <link rel="stylesheet" href="/styles.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #007BFF;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="index.html">TravelBooking</a>
-        </div>
-    </nav>
-</header>
-
-<section class="content">
-    <h2 style="text-align: center; margin-top: 30px;">Add Hotel</h2>
-    <form id="addHotelForm" style="max-width: 600px; margin: 30px auto;">
-        <label for="name">Hotel Name:</label>
-        <input type="text" id="name" placeholder="Enter hotel name" required />
-
-        <label for="roomType">Room Type:</label>
-        <select id="roomType" required>
-            <option value="single">Single</option>
-            <option value="double">Double</option>
-            <option value="family">Family</option>
-        </select>
-
-        <label for="price">Price per Night:</label>
-        <input type="number" id="price" placeholder="Enter price per night" required />
-
-        <button type="submit" class="primary-btn">Add Hotel</button>
-    </form>
-</section>
-
-<footer>
-    <div class="footer-content">
-        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+    <div class="container">
+        <h2>Add New Hotel</h2>
+        <form id="addHotelForm">
+            <div>
+                <label for="hotelName">Hotel Name</label>
+                <input type="text" id="hotelName" name="name" placeholder="Enter hotel name" required />
+            </div>
+            <div>
+                <label for="roomType">Room Type</label>
+                <select id="roomType" name="roomType" required>
+                    <option value="single">Single</option>
+                    <option value="double">Double</option>
+                    <option value="family">Family</option>
+                </select>
+            </div>
+            <div>
+                <label for="pricePerNight">Price per Night</label>
+                <input type="number" id="pricePerNight" name="pricePerNight" min="0" step="0.01" placeholder="Enter price per night" required />
+            </div>
+            <button type="submit">Add Hotel</button>
+        </form>
+        <a href="/booking/hotel.html" class="back-link">Back to Hotels</a>
     </div>
-</footer>
 
-<script>
-document.getElementById('addHotelForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+    <script>
+        document.getElementById('addHotelForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-    const name = document.getElementById('name').value.trim();
-    const roomType = document.getElementById('roomType').value;
-    const price = document.getElementById('price').value;
+            const formData = new FormData(event.target);
+            const hotelData = Object.fromEntries(formData);
 
-    const hotelData = {
-        name,
-        roomType,
-        pricePerNight: parseFloat(price),
-        available: true 
-    };
+            try {
+                const response = await fetch('/hotelrooms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(hotelData),
+                });
 
-    try {
-        const response = await fetch('/hotelrooms', { 
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(hotelData)
+                if (response.ok) {
+                    alert('Hotel added successfully!');
+                    window.location.href = '/booking/hotel.html';
+                } else {
+                    const errorText = await response.text();
+                    alert(`Error adding hotel: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error adding hotel:', error);
+                alert('An error occurred. Please try again later.');
+            }
         });
-
-        if (response.ok) {
-            alert('Hotel added successfully.');
-            window.location.href = '../hotel.html';
-        } else {
-            const errorText = await response.text();
-            alert(`Error adding hotel: ${errorText}`);
-        }
-    } catch (err) {
-        console.error('Error adding hotel:', err);
-    }
-});
-
-</script>
+    </script>
 </body>
 </html>

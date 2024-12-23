@@ -4,9 +4,13 @@ import com.sdaproject.api20216146.model.Booking;
 import com.sdaproject.api20216146.model.HotelRoom;
 import com.sdaproject.api20216146.model.Event;
 import com.sdaproject.api20216146.model.User;
+import com.sdaproject.api20216146.repository.BookingRepository;
+import com.sdaproject.api20216146.repository.HotelRoomRepository;
+import com.sdaproject.api20216146.repository.EventRepository;
+import com.sdaproject.api20216146.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -15,59 +19,83 @@ import java.util.stream.Collectors;
 @Service
 public class BookingService {
 
-    private final List<Booking> bookings = new ArrayList<>();
-    private final List<User> users = new ArrayList<>();
-    private final List<HotelRoom> hotelRooms = new ArrayList<>();
-    private final List<Event> events = new ArrayList<>();
-    private long bookingIdCounter = 1;
+    @Autowired
+    private BookingRepository bookingRepository;
 
-    public Booking bookHotelRoom(Long userId, Long roomId, Date checkInDate, Date checkOutDate) {
-        User user = findUserById(userId);
-        HotelRoom hotelRoom = findHotelRoomById(roomId);
+    @Autowired
+    private UserRepository userRepository;
 
-        if (isRoomAvailable(hotelRoom, checkInDate, checkOutDate)) {
-            Booking booking = new Booking();
-            booking.setId(bookingIdCounter++);
-            booking.setUser(user);
-            booking.setHotelRoom(hotelRoom);
-            booking.setCheckInDate(checkInDate);
-            booking.setCheckOutDate(checkOutDate);
-            booking.setBookingDate(new Date());
-            booking.setTotalAmount(calculateHotelBookingAmount(hotelRoom, checkInDate, checkOutDate));
+    @Autowired
+    private HotelRoomRepository hotelRoomRepository;
 
-            bookings.add(booking);
-            return booking;
+    @Autowired
+    private EventRepository eventRepository;
+
+    public Booking createBooking(Booking booking) {
+        validateBooking(booking);
+
+        User user = userRepository.findById(booking.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("User not found."));
+        booking.setUser(user);
+        booking.setBookingDate(new Date());
+
+        if (isHotelBooking(booking)) {
+            handleHotelBooking(booking);
+        } else if (isEventBooking(booking)) {
+            handleEventBooking(booking);
         } else {
-            throw new RuntimeException("Hotel room is not available for the selected dates.");
+            throw new RuntimeException("Booking must be associated with either a hotel room or an event.");
+        }
+
+        return bookingRepository.save(booking);
+    }
+
+    private void validateBooking(Booking booking) {
+        if (booking.getUser() == null || booking.getUser().getId() == null) {
+            throw new RuntimeException("Booking must have a valid user.");
+        }
+        if (isHotelBooking(booking) && isEventBooking(booking)) {
+            throw new RuntimeException("A booking cannot be associated with both a hotel room and an event.");
         }
     }
 
-    public Booking bookEvent(Long userId, Long eventId, int quantity) {
-        User user = findUserById(userId);
-        Event event = findEventById(eventId);
+    private boolean isHotelBooking(Booking booking) {
+        return booking.getHotelRoom() != null && booking.getHotelRoom().getId() != null;
+    }
 
-        if (isEventAvailable(event, quantity)) {
-            Booking booking = new Booking();
-            booking.setId(bookingIdCounter++);
-            booking.setUser(user);
-            booking.setEvent(event);
-            booking.setBookingDate(new Date());
-            booking.setTotalAmount(calculateEventBookingAmount(event, quantity));
+    private boolean isEventBooking(Booking booking) {
+        return booking.getEvent() != null && booking.getEvent().getId() != null;
+    }
 
-            event.setSeatsAvailable(event.getSeatsAvailable() - quantity);
+    private void handleHotelBooking(Booking booking) {
+        HotelRoom hotelRoom = hotelRoomRepository.findById(booking.getHotelRoom().getId())
+                .orElseThrow(() -> new RuntimeException("Hotel room not found."));
 
-            bookings.add(booking);
-            return booking;
-        } else {
+        if (!isRoomAvailable(hotelRoom, booking.getCheckInDate(), booking.getCheckOutDate())) {
+            throw new RuntimeException("Hotel room is not available for the selected dates.");
+        }
+
+        booking.setHotelRoom(hotelRoom);
+        booking.setTotalAmount(calculateHotelBookingAmount(hotelRoom, booking.getCheckInDate(), booking.getCheckOutDate()));
+    }
+
+    private void handleEventBooking(Booking booking) {
+        Event event = eventRepository.findById(booking.getEvent().getId())
+                .orElseThrow(() -> new RuntimeException("Event not found."));
+
+        if (!isEventAvailable(event, 1)) {
             throw new RuntimeException("Event tickets are not available.");
         }
+
+        event.setSeatsAvailable(event.getSeatsAvailable() - 1);
+        eventRepository.save(event);
+        booking.setEvent(event);
+        booking.setTotalAmount(calculateEventBookingAmount(event, 1));
     }
 
     private boolean isRoomAvailable(HotelRoom hotelRoom, Date checkInDate, Date checkOutDate) {
-        return bookings.stream()
-                .filter(booking -> booking.getHotelRoom() != null && booking.getHotelRoom().equals(hotelRoom))
-                .noneMatch(booking -> 
-                        !(checkOutDate.before(booking.getCheckInDate()) || checkInDate.after(booking.getCheckOutDate())));
+        return bookingRepository.findByHotelRoom(hotelRoom).stream()
+                .noneMatch(booking -> !(checkOutDate.before(booking.getCheckInDate()) || checkInDate.after(booking.getCheckOutDate())));
     }
 
     private boolean isEventAvailable(Event event, int quantity) {
@@ -84,70 +112,50 @@ public class BookingService {
         return event.getTicketPrice() * quantity;
     }
 
-    public Booking createBooking(Booking booking) {
-        booking.setId(bookingIdCounter++);
-        bookings.add(booking);
-        return booking;
-    }
-
     public Booking getBooking(Long id) {
-        return bookings.stream()
-                .filter(booking -> booking.getId().equals(id))
-                .findFirst()
+        return bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found."));
     }
 
     public List<Booking> getAllBookings() {
-        return new ArrayList<>(bookings);
-    }
-
-    public List<Booking> getAllBookingsForUser(Long userId) {
-        return bookings.stream()
-                .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
-                .collect(Collectors.toList());
+        return bookingRepository.findAll();
     }
 
     public List<Booking> getBookingsByUserId(Long userId) {
-        return bookings.stream()
-                .filter(booking -> booking.getUser() != null && booking.getUser().getId().equals(userId))
-                .toList();
+        return bookingRepository.findByUserId(userId);
     }
 
-    public Booking updateBooking(Long id, Booking updatedBooking) {
-        Booking booking = getBooking(id);
-        booking.setUser(updatedBooking.getUser());
-        booking.setHotelRoom(updatedBooking.getHotelRoom());
-        booking.setEvent(updatedBooking.getEvent());
-        booking.setCheckInDate(updatedBooking.getCheckInDate());
-        booking.setCheckOutDate(updatedBooking.getCheckOutDate());
-        booking.setTotalAmount(updatedBooking.getTotalAmount());
-        return booking;
+    public List<Booking> getHotelBookingsForUser(Long userId) {
+        return bookingRepository.findByUserId(userId).stream()
+                .filter(booking -> booking.getHotelRoom() != null)
+                .collect(Collectors.toList());
+    }
+
+    public List<Booking> getEventBookingsForUser(Long userId) {
+        return bookingRepository.findByUserId(userId).stream()
+                .filter(booking -> booking.getEvent() != null)
+                .collect(Collectors.toList());
     }
 
     public String deleteBooking(Long id) {
-        Booking booking = getBooking(id);
-        bookings.remove(booking);
-        return "Booking deleted";
+        if (bookingRepository.existsById(id)) {
+            bookingRepository.deleteById(id);
+            return "Booking deleted";
+        }
+        return "Booking not found";
     }
 
-    private User findUserById(Long userId) {
-        return users.stream()
-                .filter(user -> user.getId().equals(userId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("User not found."));
-    }
-
-    private HotelRoom findHotelRoomById(Long roomId) {
-        return hotelRooms.stream()
-                .filter(room -> room.getId().equals(roomId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Hotel room not found."));
-    }
-
-    private Event findEventById(Long eventId) {
-        return events.stream()
-                .filter(event -> event.getId().equals(eventId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Event not found."));
+    public Booking updateBooking(Long id, Booking updatedBooking) {
+        return bookingRepository.findById(id)
+                .map(existingBooking -> {
+                    existingBooking.setUser(updatedBooking.getUser());
+                    existingBooking.setHotelRoom(updatedBooking.getHotelRoom());
+                    existingBooking.setEvent(updatedBooking.getEvent());
+                    existingBooking.setCheckInDate(updatedBooking.getCheckInDate());
+                    existingBooking.setCheckOutDate(updatedBooking.getCheckOutDate());
+                    existingBooking.setTotalAmount(updatedBooking.getTotalAmount());
+                    return bookingRepository.save(existingBooking);
+                })
+                .orElseThrow(() -> new RuntimeException("Booking not found."));
     }
 }

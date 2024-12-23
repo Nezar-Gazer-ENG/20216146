@@ -3,6 +3,7 @@ package com.sdaproject.api20216146.controller;
 import com.sdaproject.api20216146.model.HotelRoom;
 import com.sdaproject.api20216146.service.HotelRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,54 +17,78 @@ public class HotelRoomController {
     private HotelRoomService hotelRoomService;
 
     @PostMapping
-    public ResponseEntity<HotelRoom> createHotelRoom(@RequestBody HotelRoom hotelRoom) {
+    public ResponseEntity<?> createHotelRoom(@RequestBody HotelRoom hotelRoom) {
         if (hotelRoom.getName() == null || hotelRoom.getRoomType() == null || hotelRoom.getPricePerNight() <= 0) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid hotel room details. Ensure all fields are provided and price per night is greater than 0.");
         }
         try {
             HotelRoom createdHotelRoom = hotelRoomService.createHotelRoom(hotelRoom);
-            return ResponseEntity.ok(createdHotelRoom);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdHotelRoom);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while creating the hotel room: " + e.getMessage());
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<HotelRoom> getHotelRoom(@PathVariable Long id) {
-        HotelRoom hotelRoom = hotelRoomService.getHotelRoom(id);
-        if (hotelRoom != null) {
+    public ResponseEntity<?> getHotelRoom(@PathVariable Long id) {
+        try {
+            HotelRoom hotelRoom = hotelRoomService.getHotelRoom(id);
             return ResponseEntity.ok(hotelRoom);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Hotel room not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while retrieving the hotel room: " + e.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<HotelRoom>> getAllHotelRooms() {
-        List<HotelRoom> hotelRooms = hotelRoomService.getAllHotelRooms();
-        if (hotelRooms.isEmpty()) {
-            return ResponseEntity.noContent().build();
+    public ResponseEntity<?> getAllHotelRooms() {
+        try {
+            List<HotelRoom> hotelRooms = hotelRoomService.getAllHotelRooms();
+            if (hotelRooms.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                        .body("No hotel rooms found.");
+            }
+            return ResponseEntity.ok(hotelRooms);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while retrieving hotel rooms: " + e.getMessage());
         }
-        return ResponseEntity.ok(hotelRooms);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<HotelRoom> updateHotelRoom(@PathVariable Long id, @RequestBody HotelRoom updatedHotelRoom) {
+    public ResponseEntity<?> updateHotelRoom(@PathVariable Long id, @RequestBody HotelRoom updatedHotelRoom) {
         if (updatedHotelRoom.getName() == null || updatedHotelRoom.getRoomType() == null || updatedHotelRoom.getPricePerNight() <= 0) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid updated hotel room details. Ensure all fields are provided and price per night is greater than 0.");
         }
-        HotelRoom hotelRoom = hotelRoomService.updateHotelRoom(id, updatedHotelRoom);
-        if (hotelRoom != null) {
+        try {
+            HotelRoom hotelRoom = hotelRoomService.updateHotelRoom(id, updatedHotelRoom);
             return ResponseEntity.ok(hotelRoom);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Hotel room not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while updating the hotel room: " + e.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteHotelRoom(@PathVariable Long id) {
-        String result = hotelRoomService.deleteHotelRoom(id);
-        if ("Hotel room deleted".equals(result)) {
+    public ResponseEntity<?> deleteHotelRoom(@PathVariable Long id) {
+        try {
+            String result = hotelRoomService.deleteHotelRoom(id);
             return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Hotel room not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while deleting the hotel room: " + e.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 }

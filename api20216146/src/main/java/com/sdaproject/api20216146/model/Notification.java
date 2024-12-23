@@ -1,11 +1,33 @@
 package com.sdaproject.api20216146.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Column;
+
+@Entity
+@Table(name = "notifications") 
 public class Notification {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) 
     private Long id;
-    private Long userId; // Storing user ID directly instead of linking to a User object
+
+    @Column(nullable = false) 
+    private Long userId; 
+
+    @Column(nullable = false, length = 500) 
     private String message;
+
+    @Enumerated(EnumType.STRING) 
+    @Column(nullable = false)
     private NotificationType type;
+
+    @Column(nullable = false)
     private boolean sent;
 
     public Notification() {

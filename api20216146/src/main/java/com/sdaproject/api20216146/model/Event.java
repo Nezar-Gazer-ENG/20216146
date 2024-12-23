@@ -1,17 +1,46 @@
 package com.sdaproject.api20216146.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "events")
 public class Event {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    private String description;
-    private LocalDate eventDate;
-    private String location;
-    private double ticketPrice;
-    private int seatsAvailable; 
 
+    @Column(nullable = false, length = 200)
+    private String name;
+
+    @Column(length = 1000)
+    private String description;
+
+    @Column(nullable = false)
+    private LocalDate eventDate;
+
+    @Column(nullable = false, length = 255)
+    private String location;
+
+    @Column(nullable = false)
+    private double ticketPrice;
+
+    @Column(nullable = false)
+    private int seatsAvailable;
+
+    public Event() {}
+
+    public Event(String name, String description, LocalDate eventDate, String location, double ticketPrice, int seatsAvailable) {
+        this.name = name;
+        this.description = description;
+        this.eventDate = eventDate;
+        this.location = location;
+        this.ticketPrice = ticketPrice;
+        this.seatsAvailable = seatsAvailable;
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
