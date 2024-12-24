@@ -6,7 +6,6 @@
     <title>Travel Booking App</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
-        /* Styles remain unchanged */
         .dropdown { position: relative; display: inline-block; }
         .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; }
         .dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; }
@@ -73,7 +72,7 @@
     </div>
 </footer>
 <script>
-    const BASE_URL = 'http://localhost:8080'; // Adjust if your backend is hosted elsewhere
+    const BASE_URL = 'http://localhost:8080';
 
     document.addEventListener('DOMContentLoaded', async () => {
         let isLoggedIn = false;
@@ -120,25 +119,29 @@
                 const notificationBell = document.getElementById('notificationBell');
                 const notificationsDropdown = document.getElementById('notificationsDropdown');
 
+                const socket = new SockJS(`${BASE_URL}/websocket`);
+                const stompClient = Stomp.over(socket);
+                stompClient.connect({}, () => {
+                    stompClient.subscribe('/topic/default', (message) => {
+                        const notification = JSON.parse(message.body);
+                        const notificationItem = `<div class="notification-item">${notification.message}</div>`;
+                        notificationsDropdown.innerHTML += notificationItem;
+                    });
+                });
+
                 notificationBell.addEventListener('click', async () => {
                     notificationsDropdown.style.display = notificationsDropdown.style.display === 'block' ? 'none' : 'block';
-
                     if (notificationsDropdown.style.display === 'block') {
                         try {
-                            const notificationsResponse = await fetch(`${BASE_URL}/notifications`);
-                            
-                            if (notificationsResponse.ok) {
-                                const notifications = await notificationsResponse.json();
-
-                                notificationsDropdown.innerHTML = notifications.length > 0
-                                    ? notifications.map(notification => `
-                                        <div class="notification-item">
-                                            ${notification.message}
-                                        </div>
-                                    `).join('')
+                            const userId = user.id; 
+                            const response = await fetch(`${BASE_URL}/notifications?userId=${userId}`);
+                            if (response.ok) {
+                                const notifications = await response.json();
+                                notificationsDropdown.innerHTML = notifications.length
+                                    ? notifications.map(notification => `<div class="notification-item">${notification.message}</div>`).join('')
                                     : '<div class="notification-item">You have no notifications.</div>';
                             } else {
-                                notificationsDropdown.innerHTML = '<div class="notification-item">Failed to load notifications (Server error).</div>';
+                                notificationsDropdown.innerHTML = '<div class="notification-item">Failed to load notifications.</div>';
                             }
                         } catch (error) {
                             console.error('Error fetching notifications:', error);
@@ -146,6 +149,7 @@
                         }
                     }
                 });
+
             } else {
                 console.warn('User is not logged in');
                 bookingsLink.addEventListener('click', (e) => {

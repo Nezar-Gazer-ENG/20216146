@@ -2,9 +2,11 @@ package com.sdaproject.api20216146.model;
 
 import jakarta.persistence.*;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @Entity
 @Table(name = "bookings")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Booking {
 
     @Id

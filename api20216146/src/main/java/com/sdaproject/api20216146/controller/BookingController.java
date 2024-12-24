@@ -59,6 +59,7 @@ public class BookingController {
         return ResponseEntity.ok(hotelBookings);
     }
 
+    
     @GetMapping("/events")
     public ResponseEntity<?> getEventBookings(HttpSession session) {
         User loggedInUser = (User) session.getAttribute("loggedInUser");

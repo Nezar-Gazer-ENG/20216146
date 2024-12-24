@@ -1,5 +1,8 @@
 package com.sdaproject.api20216146.service;
 
+import com.sdaproject.api20216146.model.NotificationType;
+import com.sdaproject.api20216146.model.Notification;
+import com.sdaproject.api20216146.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.slf4j.Logger;
@@ -14,39 +17,23 @@ public class NotificationService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    /**
-     *
-     * @param destination the destination path
-     * @param message     the message content
-     */
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     public void sendNotification(String destination, String message) {
         try {
             messagingTemplate.convertAndSend(destination, message);
             logger.info("Notification sent to destination: {} with message: {}", destination, message);
+
+            Notification notification = new Notification();
+            notification.setMessage(message);
+            notification.setType(NotificationType.PUSH_NOTIFICATION);
+            notification.setUserId(1L);
+            notification.setSent(true);
+            notificationRepository.save(notification);
+
         } catch (Exception e) {
             logger.error("Failed to send notification to destination: {}", destination, e);
-        }
-    }
-
-    /**
-     * Sends a notification to the default topic.
-     *
-     * @param message the message content
-     */
-    public void sendNotification(String message) {
-        sendNotification("/topic/default", message);
-    }
-
-    /**
-     
-      @param message 
-     */
-    public void sendBroadcastNotification(String message) {
-        try {
-            messagingTemplate.convertAndSend("/topic/broadcast", message);
-            logger.info("Broadcast notification sent with message: {}", message);
-        } catch (Exception e) {
-            logger.error("Failed to send broadcast notification", e);
         }
     }
 }

@@ -43,12 +43,12 @@ public class BookingService {
 
     public Booking createBooking(Booking booking) {
         validateBooking(booking);
-
+    
         User user = userRepository.findById(booking.getUser().getId())
                 .orElseThrow(() -> new RuntimeException("User not found."));
         booking.setUser(user);
         booking.setBookingDate(new Date());
-
+    
         String notificationMessage;
         if (isHotelBooking(booking)) {
             handleHotelBooking(booking);
@@ -65,14 +65,16 @@ public class BookingService {
         } else {
             throw new RuntimeException("Booking must be associated with either a hotel room or an event.");
         }
-
+    
         Booking savedBooking = bookingRepository.save(booking);
         logger.info("Booking created successfully with ID: " + savedBooking.getId());
-
+    
+        logger.info("Scheduling notification: " + notificationMessage);
         scheduleNotification(notificationMessage);
-
+    
         return savedBooking;
     }
+    
 
     private void validateBooking(Booking booking) {
         if (booking.getUser() == null || booking.getUser().getId() == null) {
@@ -86,13 +88,14 @@ public class BookingService {
     private void scheduleNotification(String message) {
         scheduler.schedule(() -> {
             try {
-                notificationService.sendNotification(message);
+                notificationService.sendNotification("/topic/default", message);
                 logger.info("Notification sent after 3 seconds: " + message);
             } catch (Exception e) {
                 logger.severe("Failed to send delayed notification: " + e.getMessage());
             }
         }, 3, TimeUnit.SECONDS);
     }
+    
 
     public List<Booking> getBookingsByUserId(Long userId) {
         return bookingRepository.findByUserId(userId);
