@@ -8,16 +8,23 @@ import com.sdaproject.api20216146.repository.BookingRepository;
 import com.sdaproject.api20216146.repository.HotelRoomRepository;
 import com.sdaproject.api20216146.repository.EventRepository;
 import com.sdaproject.api20216146.repository.UserRepository;
+import com.sdaproject.api20216146.util.BookingMessageTemplate;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 @Service
 public class BookingService {
+
+    private static final Logger logger = Logger.getLogger(BookingService.class.getName());
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -31,6 +38,9 @@ public class BookingService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public Booking createBooking(Booking booking) {
         validateBooking(booking);
 
@@ -39,15 +49,29 @@ public class BookingService {
         booking.setUser(user);
         booking.setBookingDate(new Date());
 
+        String notificationMessage;
         if (isHotelBooking(booking)) {
             handleHotelBooking(booking);
+            notificationMessage = BookingMessageTemplate.getHotelBookingMessage(
+                    booking.getHotelRoom().getName(),
+                    booking.getCheckInDate().toString()
+            );
         } else if (isEventBooking(booking)) {
             handleEventBooking(booking);
+            notificationMessage = BookingMessageTemplate.getEventBookingMessage(
+                    booking.getEvent().getName(),
+                    booking.getEvent().getEventDate().toString()
+            );
         } else {
             throw new RuntimeException("Booking must be associated with either a hotel room or an event.");
         }
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        logger.info("Booking created successfully with ID: " + savedBooking.getId());
+
+        scheduleNotification(notificationMessage);
+
+        return savedBooking;
     }
 
     private void validateBooking(Booking booking) {
@@ -57,6 +81,29 @@ public class BookingService {
         if (isHotelBooking(booking) && isEventBooking(booking)) {
             throw new RuntimeException("A booking cannot be associated with both a hotel room and an event.");
         }
+    }
+
+    private void scheduleNotification(String message) {
+        scheduler.schedule(() -> {
+            try {
+                notificationService.sendNotification(message);
+                logger.info("Notification sent after 3 seconds: " + message);
+            } catch (Exception e) {
+                logger.severe("Failed to send delayed notification: " + e.getMessage());
+            }
+        }, 3, TimeUnit.SECONDS);
+    }
+
+    public List<Booking> getBookingsByUserId(Long userId) {
+        return bookingRepository.findByUserId(userId);
+    }
+
+    public List<Booking> getHotelBookingsForUser(Long userId) {
+        return bookingRepository.findByUserIdAndHotelRoomIsNotNull(userId);
+    }
+
+    public List<Booking> getEventBookingsForUser(Long userId) {
+        return bookingRepository.findByUserIdAndEventIsNotNull(userId);
     }
 
     private boolean isHotelBooking(Booking booking) {
@@ -83,14 +130,14 @@ public class BookingService {
         Event event = eventRepository.findById(booking.getEvent().getId())
                 .orElseThrow(() -> new RuntimeException("Event not found."));
 
-        if (!isEventAvailable(event, 1)) {
-            throw new RuntimeException("Event tickets are not available.");
+        if (!isEventAvailable(event, booking.getQuantity())) {
+            throw new RuntimeException("Not enough seats available. Available: " + event.getSeatsAvailable());
         }
 
-        event.setSeatsAvailable(event.getSeatsAvailable() - 1);
+        event.setSeatsAvailable(event.getSeatsAvailable() - booking.getQuantity());
         eventRepository.save(event);
         booking.setEvent(event);
-        booking.setTotalAmount(calculateEventBookingAmount(event, 1));
+        booking.setTotalAmount(calculateEventBookingAmount(event, booking.getQuantity()));
     }
 
     private boolean isRoomAvailable(HotelRoom hotelRoom, Date checkInDate, Date checkOutDate) {
@@ -110,52 +157,5 @@ public class BookingService {
 
     private double calculateEventBookingAmount(Event event, int quantity) {
         return event.getTicketPrice() * quantity;
-    }
-
-    public Booking getBooking(Long id) {
-        return bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found."));
-    }
-
-    public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
-    }
-
-    public List<Booking> getBookingsByUserId(Long userId) {
-        return bookingRepository.findByUserId(userId);
-    }
-
-    public List<Booking> getHotelBookingsForUser(Long userId) {
-        return bookingRepository.findByUserId(userId).stream()
-                .filter(booking -> booking.getHotelRoom() != null)
-                .collect(Collectors.toList());
-    }
-
-    public List<Booking> getEventBookingsForUser(Long userId) {
-        return bookingRepository.findByUserId(userId).stream()
-                .filter(booking -> booking.getEvent() != null)
-                .collect(Collectors.toList());
-    }
-
-    public String deleteBooking(Long id) {
-        if (bookingRepository.existsById(id)) {
-            bookingRepository.deleteById(id);
-            return "Booking deleted";
-        }
-        return "Booking not found";
-    }
-
-    public Booking updateBooking(Long id, Booking updatedBooking) {
-        return bookingRepository.findById(id)
-                .map(existingBooking -> {
-                    existingBooking.setUser(updatedBooking.getUser());
-                    existingBooking.setHotelRoom(updatedBooking.getHotelRoom());
-                    existingBooking.setEvent(updatedBooking.getEvent());
-                    existingBooking.setCheckInDate(updatedBooking.getCheckInDate());
-                    existingBooking.setCheckOutDate(updatedBooking.getCheckOutDate());
-                    existingBooking.setTotalAmount(updatedBooking.getTotalAmount());
-                    return bookingRepository.save(existingBooking);
-                })
-                .orElseThrow(() -> new RuntimeException("Booking not found."));
     }
 }

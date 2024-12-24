@@ -2,59 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Travel Booking App</title>
-    <link rel="stylesheet" href="/styles.css"/>
+    <link rel="stylesheet" href="/styles.css" />
     <style>
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-        }
-
-        .dropdown-content a {
-            color: black;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
+        /* Styles remain unchanged */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; }
+        .dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; }
+        .dropdown-content a:hover { background-color: #f1f1f1; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .notification-bell { cursor: pointer; font-size: 24px; color: #333; margin-left: 15px; }
+        .notification-bell:hover { color: #555; }
+        .notifications-dropdown { display: none; position: absolute; right: 0; background-color: #fff; min-width: 300px; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2); padding: 10px; z-index: 2; border-radius: 5px; }
+        .notification-item { padding: 10px; border-bottom: 1px solid #ddd; }
+        .notification-item:last-child { border-bottom: none; }
+        .notification-item:hover { background-color: #f1f1f1; }
     </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="logo">
-                <a href="index.html">TravelBooking</a>
-            </div>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="./booking/hotel.html">Hotels</a></li>
-                <li><a href="./booking/events.html">Events</a></li>
-                <li><a href="./booking/view_bookings.html" id="bookingsLink">Bookings</a></li> 
-                <li id="authLinks">
-                    <a href="/signup.html" id="signupLink">Sign Up</a>
-                    <a href="/login.html" id="loginLink">Log In</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-    
-
+<header>
+    <nav class="navbar">
+        <div class="logo"><a href="index.html">TravelBooking</a></div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="./booking/hotel.html">Hotels</a></li>
+            <li><a href="./booking/events.html">Events</a></li>
+            <li><a href="./booking/view_bookings.html" id="bookingsLink">Bookings</a></li>
+            <li id="authLinks">
+                <a href="/signup.html" id="signupLink">Sign Up</a>
+                <a href="/login.html" id="loginLink">Log In</a>
+            </li>
+        </ul>
+    </nav>
+</header>
 <section class="hero">
     <div class="hero-content">
         <h1>Discover Your Next Adventure</h1>
@@ -62,7 +42,6 @@
         <a href="./booking/booking.html" class="primary-btn">Get Started</a>
     </div>
 </section>
-
 <section class="features">
     <h2>Why Choose Us?</h2>
     <div class="feature-cards">
@@ -83,66 +62,106 @@
         </div>
     </div>
 </section>
-
 <section class="call-to-action" id="callToAction">
     <h2>Ready to Explore?</h2>
     <p>Sign up now and get exclusive access to members-only deals.</p>
     <a href="/signup.html" class="secondary-btn">Sign Up</a>
 </section>
-
 <footer>
     <div class="footer-content">
         <p>&copy; 2024 TravelBooking. All rights reserved.</p>
     </div>
 </footer>
-
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-    let isLoggedIn = false;
+    const BASE_URL = 'http://localhost:8080'; // Adjust if your backend is hosted elsewhere
 
-    try {
-        const response = await fetch('/auth/me');
-        const authLinks = document.getElementById('authLinks');
-        const bookingsLink = document.getElementById('bookingsLink');
-        
-        if (response.ok) {
-            const user = await response.json();
-            isLoggedIn = true;
-            authLinks.innerHTML = `
-                <div class="dropdown">
-                    <a href="#" id="userMenu">${user.username}</a>
-                    <div class="dropdown-content">
-                        <a href="/profile.html">Edit Profile</a>
-                        <a href="#" id="logout">Log Out</a>
+    document.addEventListener('DOMContentLoaded', async () => {
+        let isLoggedIn = false;
+
+        try {
+            const response = await fetch(`${BASE_URL}/auth/me`);
+            const authLinks = document.getElementById('authLinks');
+            const bookingsLink = document.getElementById('bookingsLink');
+            const callToActionSection = document.getElementById('callToAction');
+
+            if (response.ok) {
+                const user = await response.json();
+                isLoggedIn = true;
+
+                authLinks.innerHTML = `
+                    <div class="dropdown">
+                        <a href="#" id="userMenu">${user.username}</a>
+                        <div class="dropdown-content">
+                            <a href="/profile.html">Edit Profile</a>
+                            <a href="#" id="logout">Log Out</a>
+                        </div>
                     </div>
-                </div>
-            `;
+                    <span class="notification-bell" id="notificationBell" aria-label="Notification Bell">🔔</span>
+                    <div class="notifications-dropdown" id="notificationsDropdown"></div>
+                `;
 
-            bookingsLink.href = "./booking/view_bookings.html"; 
-            const logout = document.getElementById('logout');
-            logout.addEventListener('click', async () => {
-                const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
-                if (logoutResponse.ok) {
-                    alert('You have been logged out.');
-                    window.location.reload();
-                } else {
-                    alert('Error during logout.');
+                bookingsLink.href = "./booking/view_bookings.html";
+
+                if (callToActionSection) {
+                    callToActionSection.style.display = 'none'; 
                 }
-            });
-        } else {
-            bookingsLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                alert('You must log in first to view bookings.');
-            });
-            authLinks.innerHTML = `
-                <a href="/signup.html" id="signupLink">Sign Up</a>
-                <a href="/login.html" id="loginLink">Log In</a>
-            `;
+
+                const logout = document.getElementById('logout');
+                logout.addEventListener('click', async () => {
+                    const logoutResponse = await fetch(`${BASE_URL}/auth/logout`, { method: 'POST' });
+                    if (logoutResponse.ok) {
+                        alert('You have been logged out.');
+                        window.location.reload();
+                    } else {
+                        alert('Error during logout.');
+                    }
+                });
+
+                const notificationBell = document.getElementById('notificationBell');
+                const notificationsDropdown = document.getElementById('notificationsDropdown');
+
+                notificationBell.addEventListener('click', async () => {
+                    notificationsDropdown.style.display = notificationsDropdown.style.display === 'block' ? 'none' : 'block';
+
+                    if (notificationsDropdown.style.display === 'block') {
+                        try {
+                            const notificationsResponse = await fetch(`${BASE_URL}/notifications`);
+                            
+                            if (notificationsResponse.ok) {
+                                const notifications = await notificationsResponse.json();
+
+                                notificationsDropdown.innerHTML = notifications.length > 0
+                                    ? notifications.map(notification => `
+                                        <div class="notification-item">
+                                            ${notification.message}
+                                        </div>
+                                    `).join('')
+                                    : '<div class="notification-item">You have no notifications.</div>';
+                            } else {
+                                notificationsDropdown.innerHTML = '<div class="notification-item">Failed to load notifications (Server error).</div>';
+                            }
+                        } catch (error) {
+                            console.error('Error fetching notifications:', error);
+                            notificationsDropdown.innerHTML = '<div class="notification-item">Error fetching notifications.</div>';
+                        }
+                    }
+                });
+            } else {
+                console.warn('User is not logged in');
+                bookingsLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert('You must log in first to view bookings.');
+                });
+
+                authLinks.innerHTML = `
+                    <a href="/signup.html" id="signupLink">Sign Up</a>
+                    <a href="/login.html" id="loginLink">Log In</a>
+                `;
+            }
+        } catch (err) {
+            console.error('Error checking login status:', err);
         }
-    } catch (err) {
-        console.error('Error checking login status:', err);
-    }
-});
+    });
 </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ public class EventService {
 
     public Event getEvent(Long id) {
         return eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Event not found with id: "));
     }
 
     public List<Event> getAllEvents() {

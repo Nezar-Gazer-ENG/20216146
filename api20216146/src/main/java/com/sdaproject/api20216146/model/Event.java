@@ -40,7 +40,6 @@ public class Event {
         this.seatsAvailable = seatsAvailable;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

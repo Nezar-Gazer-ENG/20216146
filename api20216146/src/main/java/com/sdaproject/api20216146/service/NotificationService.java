@@ -1,47 +1,52 @@
 package com.sdaproject.api20216146.service;
 
-import com.sdaproject.api20216146.model.Notification;
-import com.sdaproject.api20216146.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class NotificationService {
 
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
+
     @Autowired
-    private NotificationRepository notificationRepository;
+    private SimpMessagingTemplate messagingTemplate;
 
-    public Notification createNotification(Notification notification) {
-        return notificationRepository.save(notification); 
-    }
-
-    public Notification getNotification(Long id) {
-        return notificationRepository.findById(id).orElse(null); 
-    }
-
-    public List<Notification> getAllNotifications() {
-        return notificationRepository.findAll(); 
-    }
-
-    public Notification updateNotification(Long id, Notification updatedNotification) {
-        Notification existingNotification = getNotification(id);
-        if (existingNotification != null) {
-            existingNotification.setUserId(updatedNotification.getUserId());
-            existingNotification.setMessage(updatedNotification.getMessage());
-            existingNotification.setType(updatedNotification.getType());
-            existingNotification.setSent(updatedNotification.isSent());
-            return notificationRepository.save(existingNotification); 
+    /**
+     *
+     * @param destination the destination path
+     * @param message     the message content
+     */
+    public void sendNotification(String destination, String message) {
+        try {
+            messagingTemplate.convertAndSend(destination, message);
+            logger.info("Notification sent to destination: {} with message: {}", destination, message);
+        } catch (Exception e) {
+            logger.error("Failed to send notification to destination: {}", destination, e);
         }
-        return null;
     }
 
-    public String deleteNotification(Long id) {
-        if (notificationRepository.existsById(id)) {
-            notificationRepository.deleteById(id); 
-            return "Notification deleted";
+    /**
+     * Sends a notification to the default topic.
+     *
+     * @param message the message content
+     */
+    public void sendNotification(String message) {
+        sendNotification("/topic/default", message);
+    }
+
+    /**
+     
+      @param message 
+     */
+    public void sendBroadcastNotification(String message) {
+        try {
+            messagingTemplate.convertAndSend("/topic/broadcast", message);
+            logger.info("Broadcast notification sent with message: {}", message);
+        } catch (Exception e) {
+            logger.error("Failed to send broadcast notification", e);
         }
-        return "Notification not found";
     }
 }

@@ -33,8 +33,7 @@ public class BookingController {
         List<Booking> userBookings = bookingService.getBookingsByUserId(loggedInUser.getId());
         if (userBookings.isEmpty()) {
             logger.info("No bookings found for user with ID: " + loggedInUser.getId());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("{\"message\":\"No bookings found.\"}");
+            return ResponseEntity.ok(List.of());
         }
 
         logger.info("Successfully retrieved bookings for user with ID: " + loggedInUser.getId());
@@ -53,8 +52,7 @@ public class BookingController {
         List<Booking> hotelBookings = bookingService.getHotelBookingsForUser(loggedInUser.getId());
         if (hotelBookings.isEmpty()) {
             logger.info("No hotel bookings found for user with ID: " + loggedInUser.getId());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("{\"message\":\"No hotel bookings found.\"}");
+            return ResponseEntity.ok(List.of());
         }
 
         logger.info("Successfully retrieved hotel bookings for user with ID: " + loggedInUser.getId());
@@ -73,8 +71,7 @@ public class BookingController {
         List<Booking> eventBookings = bookingService.getEventBookingsForUser(loggedInUser.getId());
         if (eventBookings.isEmpty()) {
             logger.info("No event bookings found for user with ID: " + loggedInUser.getId());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("{\"message\":\"No event bookings found.\"}");
+            return ResponseEntity.ok(List.of());
         }
 
         logger.info("Successfully retrieved event bookings for user with ID: " + loggedInUser.getId());

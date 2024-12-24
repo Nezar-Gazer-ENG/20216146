@@ -108,7 +108,7 @@
             try {
                 const response = await fetch(`/events/${eventId}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch event details');
+                    throw new Error(`Failed to fetch event details: ${response.statusText}`);
                 }
 
                 const eventData = await response.json();
@@ -124,8 +124,8 @@
                     <p><strong>Description:</strong> ${eventData.description}</p>
                 `;
             } catch (error) {
-                console.error('Error fetching event details:', error);
-                alert('An error occurred while fetching event details.');
+                console.error('Error fetching event details:', error.message);
+                alert('Unable to fetch event details. Returning to events list.');
                 window.location.href = '/booking/events.html';
             }
         }
@@ -134,7 +134,12 @@
             event.preventDefault();
 
             const eventId = new URLSearchParams(window.location.search).get('id');
-            const quantity = parseInt(document.getElementById('ticketQuantity').value);
+            if (!eventId) {
+                alert('Invalid event ID.');
+                return;
+            }
+
+            const quantity = parseInt(document.getElementById('ticketQuantity').value, 10);
 
             if (isNaN(quantity) || quantity < 1) {
                 alert('Please enter a valid quantity.');
@@ -147,8 +152,8 @@
             }
 
             try {
-                const response = await fetch('/auth/me');
-                if (!response.ok) {
+                const authResponse = await fetch('/auth/me');
+                if (!authResponse.ok) {
                     alert('Please log in to book an event.');
                     window.location.href = '/login.html';
                     return;
@@ -164,14 +169,14 @@
                     availableSeats -= quantity;
                     document.getElementById('availableSeats').textContent = availableSeats;
                     alert('Event booked successfully!');
-                    window.location.href = '/booking/events.html';
+                    window.location.href = '../view_bookings.html';
                 } else {
                     const errorText = await bookingResponse.text();
-                    alert(`Error booking event: ${errorText}`);
+                    throw new Error(`Error booking event: ${errorText}`);
                 }
             } catch (error) {
-                console.error('Error booking event:', error);
-                alert('An error occurred. Please try again later.');
+                console.error('Error booking event:', error.message);
+                alert('Unable to book event. Please try again later.');
             }
         });
 
@@ -181,7 +186,7 @@
                 fetchEventDetails(eventId);
             } else {
                 alert('No event ID provided.');
-                window.location.href = '/booking/events.html';
+                window.location.href = '../events.html';
             }
         });
     </script>
