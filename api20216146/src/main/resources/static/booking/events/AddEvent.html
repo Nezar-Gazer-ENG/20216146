@@ -39,7 +39,7 @@
             margin-bottom: 5px;
         }
 
-        input, textarea {
+        input, select, textarea {
             padding: 10px;
             font-size: 1rem;
             border: 1px solid #ddd;
@@ -94,7 +94,15 @@
             </div>
             <div>
                 <label for="eventLocation">Location</label>
-                <input type="text" id="eventLocation" name="location" placeholder="Enter event location" required />
+                <select id="eventLocation" name="location" required>
+                    <option value="GIZA">Giza</option>
+                    <option value="CAIRO">Cairo</option>
+                    <option value="ALEXANDRIA">Alexandria</option>
+                    <option value="HURGHADA">Hurghada</option>
+                    <option value="TANTA">Tanta</option>
+                    <option value="SHARM_EL_SHEIKH">Sharm el Sheikh</option>
+                    <option value="ISMAILIA">Ismailia</option>
+                </select>
             </div>
             <div>
                 <label for="eventPrice">Price (per ticket)</label>

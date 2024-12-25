@@ -56,7 +56,6 @@ public class Booking {
         this.totalAmount = totalAmount;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -65,6 +64,7 @@ public class Booking {
         this.id = id;
     }
 
+    
     public User getUser() {
         return user;
     }

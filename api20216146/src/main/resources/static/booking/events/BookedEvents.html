@@ -148,16 +148,14 @@
 <script>
     async function fetchEventBookings() {
         const endpoint = '/bookings/events';
-
         try {
             const response = await fetch(endpoint);
-
             if (response.ok) {
                 const bookings = await response.json();
                 displayBookings(bookings);
-            }else if (response.status === 404) {
+            } else if (response.status === 404) {
                 displayBookings([]);
-            }else if (response.status === 401) {
+            } else if (response.status === 401) {
                 alert('You must log in to view your bookings.');
                 window.location.href = '/login.html';
             } else {
@@ -172,7 +170,6 @@
     function displayBookings(bookings) {
         const bookingsContainer = document.getElementById('bookingsContainer');
         const emptyMessage = document.getElementById('emptyMessage');
-
         bookingsContainer.innerHTML = '';
 
         if (bookings.length === 0) {
@@ -188,9 +185,10 @@
 
             bookingCard.innerHTML = `
                 <h3>Event Booking</h3>
-                <p>Event Name: ${booking.event.name}</p>
-                <p>Event Date: ${new Date(booking.event.eventDate).toLocaleDateString()}</p>
-                <p>Total Price: $${booking.totalAmount.toFixed(2)}</p>
+                <p><strong>Event Name:</strong> ${booking.event.name}</p>
+                <p><strong>Event Date:</strong> ${new Date(booking.event.eventDate).toLocaleDateString()}</p>
+                <p><strong>Tickets Booked:</strong> ${booking.quantity}</p>
+                <p><strong>Total Price:</strong> $${booking.totalAmount.toFixed(2)}</p>
             `;
 
             bookingsContainer.appendChild(bookingCard);

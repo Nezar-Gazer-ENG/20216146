@@ -6,71 +6,6 @@
     <title>Hotels - Travel Booking App</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: white;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .logo a {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #007BFF;
-            text-decoration: none;
-        }
-
-        .logo a:hover {
-            text-decoration: underline;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-links a {
-            color: #007BFF;
-            text-decoration: none;
-            font-size: 1rem;
-        }
-
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: white;
-            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-            min-width: 160px;
-            border: 1px solid #ddd;
-            z-index: 1;
-        }
-
-        .dropdown-content a {
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #007BFF;
-            display: block;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
         .hotel-container {
             display: flex;
             flex-wrap: wrap;
@@ -149,144 +84,171 @@
         .add-hotel button:hover {
             background-color: #218838;
         }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .filters input, .filters select, .filters button {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .filters button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .filters button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="../index.html">TravelBooking</a>
-        </div>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="hotel.html">Hotels</a></li>
-            <li><a href="events.html">Events</a></li>
-            <li><a href="view_bookings.html" id="bookingsBtn">Bookings</a></li>
-            <li id="authLinks"></li>
-        </ul>
-    </nav>
-</header>
-
-<section class="content">
-    <div class="add-hotel">
-        <button onclick="window.location.href='./hotel/AddHotel.html'">Add Hotel</button>
-    </div>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="../index.html">TravelBooking</a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="hotel.html">Hotels</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="view_bookings.html" id="bookingsBtn">Bookings</a></li>
+                <li id="authLinks"></li>
+            </ul>
+        </nav>
+    </header>
     
-    <h2 style="text-align: center; margin-top: 30px;">Explore Hotels</h2>
-    <div class="hotel-container" id="hotelsContainer">
-    </div>
-</section>
+    <section class="content">
+        <div class="add-hotel">
+            <button onclick="window.location.href='./hotel/AddHotel.html'">Add Hotel</button>
+        </div>
+    
+        <div class="filters">
+            <input type="text" id="searchName" placeholder="Search by hotel name" />
+            <select id="filterCity">
+                <option value="">All Cities</option>
+                <option value="GIZA">Giza</option>
+                <option value="CAIRO">Cairo</option>
+                <option value="ALEXANDRIA">Alexandria</option>
+                <option value="HURGHADA">Hurghada</option>
+                <option value="TANTA">Tanta</option>
+                <option value="SHARM_EL_SHEIKH">Sharm el Sheikh</option>
+                <option value="ISMAILIA">Ismailia</option>
+            </select>
+            <select id="filterRoomType">
+                <option value="">All Room Types</option>
+                <option value="single">Single</option>
+                <option value="double">Double</option>
+                <option value="family">Family</option>
+            </select>
+            <input type="number" id="maxPrice" placeholder="Max price per night" min="0" />
+            <button onclick="applyFilters()">Filter</button>
+        </div>
+    
+        <h2 style="text-align: center; margin-top: 30px;">Explore Hotels</h2>
+        <div class="hotel-container" id="hotelsContainer"></div>
+    </section>
+    
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+        </div>
+    </footer>
 
-<footer>
-    <div class="footer-content">
-        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
-    </div>
-</footer>
-
-<script>
-    async function fetchHotels() {
-        try {
-            const response = await fetch('/hotelrooms');
-            const hotels = await response.json();
-
+    <script>
+        let allHotels = [];
+    
+        async function fetchHotels() {
+            try {
+                const response = await fetch('/hotelrooms');
+                allHotels = await response.json();
+                renderHotels(allHotels);
+            } catch (err) {
+                console.error('Error fetching hotels:', err);
+            }
+        }
+    
+        function renderHotels(hotels) {
             const hotelsContainer = document.getElementById('hotelsContainer');
             hotelsContainer.innerHTML = '';
-
+    
+            if (hotels.length === 0) {
+                hotelsContainer.innerHTML = '<p>No hotels found.</p>';
+                return;
+            }
+    
             hotels.forEach(hotel => {
                 const hotelCard = document.createElement('div');
                 hotelCard.className = 'hotel-card';
-
+    
                 hotelCard.innerHTML = `
                     <h3>${hotel.name}</h3>
-                    <p>${hotel.description}</p>
+                    <p><strong>City:</strong> ${hotel.location}</p>
                     <p><strong>Room Type:</strong> ${hotel.roomType}</p>
                     <p><strong>Price per Night:</strong> $${hotel.pricePerNight}</p>
-                    <p><strong>Available Rooms:</strong> ${hotel.roomsAvailable}</p>
                     <div>
                         <button onclick="redirectToEdit(${hotel.id})">Edit</button>
                         <button onclick="redirectToBooking(${hotel.id})">Book</button>
                         <button class="delete-button" onclick="deleteHotel(${hotel.id})">Delete</button>
                     </div>
                 `;
-
+    
                 hotelsContainer.appendChild(hotelCard);
             });
-        } catch (err) {
-            console.error('Error fetching hotels:', err);
         }
-    }
-
-    function redirectToEdit(hotelId) {
-        window.location.href = `./hotel/EditHotel.html?hotelId=${hotelId}`;
-    }
-
-    function redirectToBooking(hotelId) {
-        window.location.href = `./hotel/BookRoom.html?hotelId=${hotelId}`;
-    }
-
-    async function deleteHotel(hotelId) {
-        if (!confirm('Are you sure you want to delete this hotel?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/hotelrooms/${hotelId}`, {
-                method: 'DELETE',
+    
+        function applyFilters() {
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+            const filterCity = document.getElementById('filterCity').value;
+            const filterRoomType = document.getElementById('filterRoomType').value;
+            const maxPrice = parseFloat(document.getElementById('maxPrice').value);
+    
+            const filteredHotels = allHotels.filter(hotel => {
+                const matchesName = hotel.name.toLowerCase().includes(searchName);
+                const matchesCity = filterCity ? hotel.location === filterCity : true;
+                const matchesRoomType = filterRoomType ? hotel.roomType === filterRoomType : true;
+                const matchesPrice = !isNaN(maxPrice) ? hotel.pricePerNight <= maxPrice : true;
+    
+                return matchesName && matchesCity && matchesRoomType && matchesPrice;
             });
-
-            if (response.ok) {
-                alert('Hotel deleted successfully!');
-                fetchHotels();
-            } else {
-                const errorText = await response.text();
-                alert(`Error deleting hotel: ${errorText}`);
-            }
-        } catch (err) {
-            alert('An error occurred while deleting the hotel. Please try again later.');
+    
+            renderHotels(filteredHotels);
         }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        fetchHotels();
-
-        const authLinks = document.getElementById('authLinks');
-        const bookingsBtn = document.getElementById('bookingsBtn');
-        try {
-            const response = await fetch('/auth/me');
-            if (response.ok) {
-                const user = await response.json();
-                authLinks.innerHTML = `
-                    <div class="dropdown">
-                        <a href="#" id="userMenu">${user.username}</a>
-                        <div class="dropdown-content">
-                            <a href="/profile.html">Edit Profile</a>
-                            <a href="#" id="logout">Log Out</a>
-                        </div>
-                    </div>
-                `;
-                const logout = document.getElementById('logout');
-                logout.addEventListener('click', async () => {
-                    const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
-                    if (logoutResponse.ok) {
-                        alert('You have been logged out.');
-                        window.location.reload();
-                    } else {
-                        alert('Error during logout.');
-                    }
-                });
-            } else {
-                bookingsBtn.addEventListener('click', () => {
-                    alert('You must log in first to view bookings.');
-                });
-                authLinks.innerHTML = `
-                    <a href="/signup.html" id="signupLink">Sign Up</a>
-                    <a href="/login.html" id="loginLink">Log In</a>
-                `;
-            }
-        } catch (err) {
-            console.error('Error checking login status:', err);
+    
+        function redirectToEdit(hotelId) {
+            window.location.href = `./hotel/EditHotel.html?hotelId=${hotelId}`;
         }
-    });
-</script>
-
+    
+        function redirectToBooking(hotelId) {
+            window.location.href = `./hotel/BookRoom.html?hotelId=${hotelId}`;
+        }
+    
+        async function deleteHotel(hotelId) {
+            if (!confirm('Are you sure you want to delete this hotel?')) return;
+    
+            try {
+                const response = await fetch(`/hotelrooms/${hotelId}`, { method: 'DELETE' });
+    
+                if (response.ok) {
+                    alert('Hotel deleted successfully!');
+                    fetchHotels();
+                } else {
+                    alert('Failed to delete hotel.');
+                }
+            } catch (err) {
+                alert('An error occurred while deleting the hotel.');
+            }
+        }
+    
+        document.addEventListener('DOMContentLoaded', fetchHotels);
+    </script>
 </body>
 </html>

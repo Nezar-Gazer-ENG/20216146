@@ -137,7 +137,6 @@
 <script>
     async function fetchHotelBookings() {
         const endpoint = '/bookings/hotels';
-
         try {
             const response = await fetch(endpoint);
 
@@ -161,7 +160,6 @@
     function displayBookings(bookings) {
         const bookingsContainer = document.getElementById('bookingsContainer');
         const emptyMessage = document.getElementById('emptyMessage');
-
         bookingsContainer.innerHTML = '';
 
         if (bookings.length === 0) {
@@ -177,10 +175,12 @@
 
             bookingCard.innerHTML = `
                 <h3>Hotel Booking</h3>
-                <p>Hotel Name: ${booking.hotelRoom.name}</p>
-                <p>Check-In: ${new Date(booking.checkInDate).toLocaleDateString()}</p>
-                <p>Check-Out: ${new Date(booking.checkOutDate).toLocaleDateString()}</p>
-                <p>Total Price: $${booking.totalAmount.toFixed(2)}</p>
+                <p><strong>Hotel Name:</strong> ${booking.hotelRoom.name}</p>
+                <p><strong>City:</strong> ${booking.hotelRoom.location}</p>
+                <p><strong>Room Type:</strong> ${booking.hotelRoom.roomType}</p>
+                <p><strong>Check-In:</strong> ${new Date(booking.checkInDate).toLocaleDateString()}</p>
+                <p><strong>Check-Out:</strong> ${new Date(booking.checkOutDate).toLocaleDateString()}</p>
+                <p><strong>Total Price:</strong> $${booking.totalAmount.toFixed(2)}</p>
             `;
 
             bookingsContainer.appendChild(bookingCard);
@@ -225,5 +225,6 @@
         await fetchHotelBookings();
     });
 </script>
+
 </body>
 </html>

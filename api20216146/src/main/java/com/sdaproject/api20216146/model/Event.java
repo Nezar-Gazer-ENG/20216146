@@ -20,8 +20,8 @@ public class Event {
     @Column(nullable = false)
     private LocalDate eventDate;
 
-    @Column(nullable = false, length = 255)
-    private String location;
+    @Enumerated(EnumType.STRING)
+    private City location;
 
     @Column(nullable = false)
     private double ticketPrice;
@@ -31,7 +31,7 @@ public class Event {
 
     public Event() {}
 
-    public Event(String name, String description, LocalDate eventDate, String location, double ticketPrice, int seatsAvailable) {
+    public Event(String name, String description, LocalDate eventDate, City location, double ticketPrice, int seatsAvailable) {
         this.name = name;
         this.description = description;
         this.eventDate = eventDate;
@@ -72,11 +72,11 @@ public class Event {
         this.eventDate = eventDate;
     }
 
-    public String getLocation() {
+    public City getLocation() {
         return location;
     }
 
-    public void setLocation(String location) {
+    public void setLocation(City location) {
         this.location = location;
     }
 

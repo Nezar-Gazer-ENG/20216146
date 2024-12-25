@@ -15,9 +15,7 @@ public class HotelRoomService {
     private HotelRoomRepository hotelRoomRepository;
 
     public HotelRoom createHotelRoom(HotelRoom hotelRoom) {
-        if (hotelRoom == null || hotelRoom.getPricePerNight() <= 0) {
-            throw new IllegalArgumentException("Invalid hotel room details.");
-        }
+        validateHotelRoom(hotelRoom);
         return hotelRoomRepository.save(hotelRoom);
     }
 
@@ -31,6 +29,7 @@ public class HotelRoomService {
     }
 
     public HotelRoom updateHotelRoom(Long id, HotelRoom updatedHotelRoom) {
+        validateHotelRoom(updatedHotelRoom);
         return hotelRoomRepository.findById(id)
                 .map(existingHotelRoom -> {
                     if (updatedHotelRoom.getName() != null) {
@@ -41,6 +40,9 @@ public class HotelRoomService {
                     }
                     if (updatedHotelRoom.getPricePerNight() > 0) {
                         existingHotelRoom.setPricePerNight(updatedHotelRoom.getPricePerNight());
+                    }
+                    if (updatedHotelRoom.getLocation() != null) {
+                        existingHotelRoom.setLocation(updatedHotelRoom.getLocation());
                     }
                     existingHotelRoom.setAvailable(updatedHotelRoom.isAvailable());
                     return hotelRoomRepository.save(existingHotelRoom);
@@ -62,5 +64,14 @@ public class HotelRoomService {
             throw new RuntimeException("Hotel room is not available.");
         }
         return true;
+    }
+
+    private void validateHotelRoom(HotelRoom hotelRoom) {
+        if (hotelRoom == null || hotelRoom.getPricePerNight() <= 0) {
+            throw new IllegalArgumentException("Invalid hotel room details.");
+        }
+        if (hotelRoom.getLocation() == null) {
+            throw new RuntimeException("Hotel room location is required.");
+        }
     }
 }

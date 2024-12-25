@@ -1,6 +1,7 @@
 package com.sdaproject.api20216146.controller;
 
 import com.sdaproject.api20216146.model.Event;
+import com.sdaproject.api20216146.service.EventRecommendationService;
 import com.sdaproject.api20216146.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,16 +17,29 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-@PostMapping
-public ResponseEntity<?> createEvent(@RequestBody Event event) {
-    try {
-        Event createdEvent = eventService.createEvent(event);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
-    } catch (RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
-    }
-}
+    @Autowired
+    private EventRecommendationService recommendationService;
 
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<Event>> getRecommendations(@RequestParam String userId) {
+        try {
+            Long userIdLong = Long.parseLong(userId);
+            List<Event> recommendedEvents = recommendationService.getRecommendedEvents(userIdLong);
+            return ResponseEntity.ok(recommendedEvents);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createEvent(@RequestBody Event event) {
+        try {
+            Event createdEvent = eventService.createEvent(event);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEvent(@PathVariable Long id) {

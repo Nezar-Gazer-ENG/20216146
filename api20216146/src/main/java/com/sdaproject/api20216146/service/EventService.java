@@ -20,7 +20,7 @@ public class EventService {
 
     public Event getEvent(Long id) {
         return eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found with id: "));
+                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
     }
 
     public List<Event> getAllEvents() {
@@ -69,7 +69,7 @@ public class EventService {
         if (event.getName() == null || event.getName().isEmpty()) {
             throw new RuntimeException("Event name is required");
         }
-        if (event.getLocation() == null || event.getLocation().isEmpty()) {
+        if (event.getLocation() == null) {
             throw new RuntimeException("Event location is required");
         }
         if (event.getEventDate() == null) {

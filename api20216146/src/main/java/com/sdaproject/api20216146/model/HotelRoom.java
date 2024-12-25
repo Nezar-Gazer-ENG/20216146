@@ -1,6 +1,8 @@
 package com.sdaproject.api20216146.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,6 +12,9 @@ import jakarta.persistence.Column;
 @Entity
 @Table(name = "hotel_rooms") 
 public class HotelRoom {
+
+    @Enumerated(EnumType.STRING)
+    private City location;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) 
@@ -30,14 +35,14 @@ public class HotelRoom {
     public HotelRoom() {
     }
 
-    public HotelRoom(String name, String roomType, double pricePerNight, boolean available) {
+    public HotelRoom(String name, String roomType, double pricePerNight, boolean available, City location) {
         this.name = name;
         this.roomType = roomType;
         this.pricePerNight = pricePerNight;
         this.available = available;
+        this.location = location;
     }
 
-    // Getters and setters
     public Long getId() {
         return id;
     }
@@ -76,5 +81,13 @@ public class HotelRoom {
 
     public void setAvailable(boolean available) {
         this.available = available;
+    }
+
+    public City getLocation() {
+        return location;
+    }
+
+    public void setLocation(City location) {
+        this.location = location;
     }
 }

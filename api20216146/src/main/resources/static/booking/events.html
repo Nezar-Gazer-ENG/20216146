@@ -95,7 +95,7 @@
             position: absolute;
             background-color: #f9f9f9;
             min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
             z-index: 1;
         }
 
@@ -113,158 +113,194 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .filters input, .filters select, .filters button {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .filters button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .filters button:hover {
+            background-color: #0056b3;
+        }
+        .recommended-banner {
+            display: inline-block;
+            background-color: #ffc107;
+            color: #333;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="../index.html">TravelBooking</a>
-        </div>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="hotel.html">Hotels</a></li>
-            <li><a href="events.html">Events</a></li>
-            <li><a href="#" id="bookingsBtn">Bookings</a></li>
-            <li id="authLinks">
-                <a href="/signup.html" id="signupLink">Sign Up</a>
-                <a href="/login.html" id="loginLink">Log In</a>
-            </li>
-        </ul>
-    </nav>
-</header>
-
-<section class="content">
-    <div class="add-event">
-        <button onclick="window.location.href='./events/AddEvent.html'">Add Event</button>
-    </div>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="../index.html">TravelBooking</a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="hotel.html">Hotels</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="#" id="bookingsBtn">Bookings</a></li>
+                <li id="authLinks"></li>
+            </ul>
+        </nav>
+    </header>
     
-    <h2 style="text-align: center; margin-top: 30px;">Explore Local Events</h2>
-    <div class="event-container" id="eventsContainer">
-    </div>
-</section>
+    <section class="content">
+        <div class="add-event">
+            <button onclick="window.location.href='./events/AddEvent.html'">Add Event</button>
+        </div>
+    
+        <div class="filters">
+            <input type="text" id="searchName" placeholder="Search by event name" />
+            <select id="filterCity">
+                <option value="">All Cities</option>
+                <option value="GIZA">Giza</option>
+                <option value="CAIRO">Cairo</option>
+                <option value="ALEXANDRIA">Alexandria</option>
+                <option value="HURGHADA">Hurghada</option>
+                <option value="TANTA">Tanta</option>
+                <option value="SHARM_EL_SHEIKH">Sharm el Sheikh</option>
+                <option value="ISMAILIA">Ismailia</option>
+            </select>
+            <input type="number" id="maxPrice" placeholder="Max price" min="0" />
+            <input type="date" id="eventDate" placeholder="Event date" />
+            <button onclick="applyFilters()">Filter</button>
+        </div>
+    
+        <h2 style="text-align: center; margin-top: 30px;">Explore Local Events</h2>
+        <div class="event-container" id="eventsContainer"></div>
+    </section>
+    
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 TravelBooking. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        let allEvents = [];
+        let recommendedEventIds = [];
+    
+        async function fetchEvents() {
+            try {
+                const response = await fetch('/events');
+                allEvents = await response.json();
+                await fetchRecommendedEvents();
+                renderEvents(allEvents);
+            } catch (err) {
+                console.error('Error fetching events:', err);
+            }
+        }
+    
+        async function fetchRecommendedEvents() {
+            try {
+                const response = await fetch('/events/recommendations');
+                if (response.ok) {
+                    const recommendations = await response.json();
+                    recommendedEventIds = recommendations.map(event => event.id);
+                } else {
+                    console.error('Failed to fetch recommended events');
+                }
+            } catch (err) {
+                console.error('Error fetching recommended events:', err);
+            }
+        }
 
-<footer>
-    <div class="footer-content">
-        <p>&copy; 2024 TravelBooking. All rights reserved.</p>
-    </div>
-</footer>
-
-<script>
-    async function fetchEvents() {
-        try {
-            const response = await fetch('/events');
-            const events = await response.json();
-
+        function renderEvents(events) {
             const eventsContainer = document.getElementById('eventsContainer');
             eventsContainer.innerHTML = '';
-
+    
+            if (events.length === 0) {
+                eventsContainer.innerHTML = '<p>No events found.</p>';
+                return;
+            }
+    
             events.forEach(event => {
                 const eventCard = document.createElement('div');
                 eventCard.className = 'event-card';
-
-                let buttonHTML;
-                if (event.seatsAvailable > 0) {
-                    buttonHTML = `<button onclick="redirectToBooking(${event.id})">Book</button>`;
-                } else {
-                    buttonHTML = `<button disabled style="background-color: #ccc; cursor: not-allowed;">Sold Out</button>`;
-                }
-
+    
+                const isRecommended = recommendedEventIds.includes(event.id);
+    
                 eventCard.innerHTML = `
                     <h3>${event.name}</h3>
+                    ${isRecommended ? '<span style="color: green; font-weight: bold;">Recommended</span>' : ''}
                     <p>${event.description}</p>
-                    <p><strong>Date:</strong> ${event.date}</p>
+                    <p><strong>Date:</strong> ${new Date(event.eventDate).toLocaleDateString()}</p>
                     <p><strong>Location:</strong> ${event.location}</p>
-                    <p><strong>Price:</strong> $${event.price}</p>
+                    <p><strong>Price:</strong> $${event.ticketPrice}</p>
                     <p><strong>Available Seats:</strong> ${event.seatsAvailable}</p>
                     <div>
                         <button onclick="redirectToEdit(${event.id})">Edit</button>
-                        ${buttonHTML}
+                        <button onclick="redirectToBooking(${event.id})">Book</button>
                         <button class="delete-button" onclick="deleteEvent(${event.id})">Delete</button>
                     </div>
                 `;
-
                 eventsContainer.appendChild(eventCard);
             });
-        } catch (err) {
-            console.error('Error fetching events:', err);
         }
-    }
-
-    function redirectToEdit(eventId) {
-        window.location.href = `./events/EditEvent.html?id=${eventId}`;
-    }
-
-    function redirectToBooking(eventId) {
-        window.location.href = `./events/BookEvent.html?id=${eventId}`;
-    }
-
-    async function deleteEvent(eventId) {
-        if (!confirm('Are you sure you want to delete this event?')) {
-            return;
+    
+        async function deleteEvent(eventId) {
+            if (!confirm('Are you sure you want to delete this event?')) return;
+    
+            try {
+                const response = await fetch(`/events/${eventId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Event deleted successfully!');
+                    fetchEvents();
+                } else {
+                    alert('Failed to delete event.');
+                }
+            } catch (err) {
+                alert('An error occurred while deleting the event.');
+            }
         }
-
-        try {
-            const response = await fetch(`/events/${eventId}`, {
-                method: 'DELETE',
+    
+        function applyFilters() {
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+            const filterCity = document.getElementById('filterCity').value;
+            const maxPrice = parseFloat(document.getElementById('maxPrice').value);
+            const eventDate = document.getElementById('eventDate').value;
+    
+            const filteredEvents = allEvents.filter(event => {
+                const matchesName = event.name.toLowerCase().includes(searchName);
+                const matchesCity = filterCity ? event.location === filterCity : true;
+                const matchesPrice = !isNaN(maxPrice) ? event.ticketPrice <= maxPrice : true;
+                const matchesDate = eventDate ? event.eventDate === eventDate : true;
+                return matchesName && matchesCity && matchesPrice && matchesDate;
             });
-
-            if (response.ok) {
-                alert('Event deleted successfully!');
-                fetchEvents(); // Refresh the event list
-            } else {
-                const errorText = await response.text();
-                alert(`Error deleting event: ${errorText}`);
-            }
-        } catch (err) {
-            alert('An error occurred while deleting the event. Please try again later.');
+    
+            renderEvents(filteredEvents);
         }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const response = await fetch('/auth/me');
-            const authLinks = document.getElementById('authLinks');
-            const bookingsBtn = document.getElementById('bookingsBtn');
-
-            if (response.ok) {
-                const user = await response.json();
-                authLinks.innerHTML = `
-                    <div class="dropdown">
-                        <a href="#" id="userMenu">${user.username}</a>
-                        <div class="dropdown-content">
-                            <a href="/profile.html">Edit Profile</a>
-                            <a href="#" id="logout">Log Out</a>
-                        </div>
-                    </div>
-                `;
-
-                bookingsBtn.href = "./view_bookings.html";
-                const logout = document.getElementById('logout');
-                logout.addEventListener('click', async () => {
-                    const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
-                    if (logoutResponse.ok) {
-                        alert('You have been logged out.');
-                        window.location.reload();
-                    } else {
-                        alert('Error during logout.');
-                    }
-                });
-            } else {
-                bookingsBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    alert('You must log in first to view bookings.');
-                });
-                authLinks.innerHTML = `
-                    <a href="/signup.html" id="signupLink">Sign Up</a>
-                    <a href="/login.html" id="loginLink">Log In</a>
-                `;
-            }
-        } catch (err) {
-            console.error('Error checking login status:', err);
+    
+        function redirectToEdit(eventId) {
+            window.location.href = `./events/EditEvent.html?id=${eventId}`;
         }
-        fetchEvents();
-    });
-</script>
-
-</body>
+    
+        function redirectToBooking(eventId) {
+            window.location.href = `./events/BookEvent.html?id=${eventId}`;
+        }
+    
+        document.addEventListener('DOMContentLoaded', fetchEvents);
+    </script>
+        
+    </body>
 </html>
