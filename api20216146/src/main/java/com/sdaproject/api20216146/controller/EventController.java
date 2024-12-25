@@ -21,13 +21,15 @@ public class EventController {
     private EventRecommendationService recommendationService;
 
     @GetMapping("/recommendations")
-    public ResponseEntity<List<Event>> getRecommendations(@RequestParam String userId) {
+    public ResponseEntity<?> getRecommendations(@RequestParam Long userId) {
         try {
-            Long userIdLong = Long.parseLong(userId);
-            List<Event> recommendedEvents = recommendationService.getRecommendedEvents(userIdLong);
+            List<Event> recommendedEvents = recommendationService.getRecommendedEvents(userId);
+            if (recommendedEvents.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No recommended events found.");
+            }
             return ResponseEntity.ok(recommendedEvents);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
 

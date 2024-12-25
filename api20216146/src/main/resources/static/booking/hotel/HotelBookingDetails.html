@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hotel Booking Details</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .details {
+            margin-bottom: 20px;
+        }
+
+        .details p {
+            margin: 10px 0;
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .print-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+
+        .back-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hotel Booking Details</h1>
+        <div class="details" id="bookingDetails">
+            <!-- Booking details will be dynamically loaded here -->
+        </div>
+        <button class="print-button" onclick="window.print()">Print</button>
+        <a href="./BookedHotels.html" class="back-button">Back to Bookings</a>
+    </div>
+
+    <script>
+        // Get the booking ID from the query parameters
+        const queryParams = new URLSearchParams(window.location.search);
+        const bookingId = queryParams.get('bookingId');
+
+        async function fetchBookingDetails() {
+            try {
+                const response = await fetch(`/bookings/${bookingId}`);
+                if (response.ok) {
+                    const booking = await response.json();
+                    displayBookingDetails(booking);
+                } else {
+                    document.getElementById('bookingDetails').innerHTML = '<p>Failed to load booking details. Please try again later.</p>';
+                }
+            } catch (err) {
+                console.error('Error fetching booking details:', err);
+                document.getElementById('bookingDetails').innerHTML = '<p>Error loading booking details. Please try again later.</p>';
+            }
+        }
+
+        function displayBookingDetails(booking) {
+            const detailsContainer = document.getElementById('bookingDetails');
+            detailsContainer.innerHTML = `
+                <p><strong>Hotel Name:</strong> ${booking.hotelRoom.name}</p>
+                <p><strong>City:</strong> ${booking.hotelRoom.location}</p>
+                <p><strong>Room Type:</strong> ${booking.hotelRoom.roomType}</p>
+                <p><strong>Check-In Date:</strong> ${new Date(booking.checkInDate).toLocaleDateString()}</p>
+                <p><strong>Check-Out Date:</strong> ${new Date(booking.checkOutDate).toLocaleDateString()}</p>
+                <p><strong>Total Price:</strong> $${booking.totalAmount.toFixed(2)}</p>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchBookingDetails);
+    </script>
+</body>
+</html>

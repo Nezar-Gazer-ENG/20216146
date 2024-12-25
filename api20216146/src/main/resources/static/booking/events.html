@@ -93,16 +93,18 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            background-color: #f9f9f9;
+            right: 0;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
             min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            border: 1px solid #ddd;
             z-index: 1;
         }
 
         .dropdown-content a {
-            color: black;
-            padding: 12px 16px;
+            padding: 10px 15px;
             text-decoration: none;
+            color: #007BFF;
             display: block;
         }
 
@@ -138,6 +140,7 @@
         .filters button:hover {
             background-color: #0056b3;
         }
+
         .recommended-banner {
             display: inline-block;
             background-color: #ffc107;
@@ -146,6 +149,17 @@
             padding: 5px 10px;
             border-radius: 5px;
             margin-bottom: 10px;
+        }
+
+        .notification-bell {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #007BFF;
+            margin-left: 15px;
+        }
+
+        .notification-bell:hover {
+            color: #0056b3;
         }
     </style>
 </head>
@@ -158,7 +172,7 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="hotel.html">Hotels</a></li>
                 <li><a href="events.html">Events</a></li>
-                <li><a href="#" id="bookingsBtn">Bookings</a></li>
+                <li><a href="booking.html" id="bookingsBtn">Bookings</a></li>
                 <li id="authLinks"></li>
             </ul>
         </nav>
@@ -184,6 +198,7 @@
             <input type="number" id="maxPrice" placeholder="Max price" min="0" />
             <input type="date" id="eventDate" placeholder="Event date" />
             <button onclick="applyFilters()">Filter</button>
+            <button onclick="filterRecommended()">Filter by Recommended</button>
         </div>
     
         <h2 style="text-align: center; margin-top: 30px;">Explore Local Events</h2>
@@ -224,7 +239,7 @@
                 console.error('Error fetching recommended events:', err);
             }
         }
-
+    
         function renderEvents(events) {
             const eventsContainer = document.getElementById('eventsContainer');
             eventsContainer.innerHTML = '';
@@ -241,8 +256,8 @@
                 const isRecommended = recommendedEventIds.includes(event.id);
     
                 eventCard.innerHTML = `
+                    ${isRecommended ? '<div class="recommended-banner">Recommended</div>' : ''}
                     <h3>${event.name}</h3>
-                    ${isRecommended ? '<span style="color: green; font-weight: bold;">Recommended</span>' : ''}
                     <p>${event.description}</p>
                     <p><strong>Date:</strong> ${new Date(event.eventDate).toLocaleDateString()}</p>
                     <p><strong>Location:</strong> ${event.location}</p>
@@ -270,7 +285,43 @@
                     alert('Failed to delete event.');
                 }
             } catch (err) {
-                alert('An error occurred while deleting the event.');
+                console.error('Error deleting event:', err);
+            }
+        }
+    
+        async function fetchUserDetails() {
+            try {
+                const response = await fetch('/auth/me');
+                if (response.ok) {
+                    const user = await response.json();
+                    const authLinks = document.getElementById('authLinks');
+                    authLinks.innerHTML = `
+                        <div class="dropdown">
+                            <span>${user.username}</span>
+                            <div class="dropdown-content">
+                                <a href="/profile.html">Edit Profile</a>
+                                <a href="#" onclick="logout()">Log Out</a>
+                            </div>
+                        </div>
+                        <span class="notification-bell">🔔</span>
+                    `;
+                }
+            } catch (err) {
+                console.error('Error fetching user details:', err);
+            }
+        }
+    
+        async function logout() {
+            try {
+                const response = await fetch('/auth/logout', { method: 'POST' });
+                if (response.ok) {
+                    alert('You have been logged out.');
+                    window.location.reload();
+                } else {
+                    alert('Logout failed.');
+                }
+            } catch (err) {
+                console.error('Error during logout:', err);
             }
         }
     
@@ -290,6 +341,11 @@
     
             renderEvents(filteredEvents);
         }
+
+        function filterRecommended() {
+            const recommendedEvents = allEvents.filter(event => recommendedEventIds.includes(event.id));
+            renderEvents(recommendedEvents);
+        }
     
         function redirectToEdit(eventId) {
             window.location.href = `./events/EditEvent.html?id=${eventId}`;
@@ -299,8 +355,10 @@
             window.location.href = `./events/BookEvent.html?id=${eventId}`;
         }
     
-        document.addEventListener('DOMContentLoaded', fetchEvents);
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchEvents();
+            fetchUserDetails();
+        });
     </script>
-        
-    </body>
+</body>
 </html>

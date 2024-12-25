@@ -26,14 +26,29 @@ public class EventRecommendationService {
         List<Booking> bookings = bookingRepository.findByUserId(userId);
         List<Event> recommendedEvents = new ArrayList<>();
 
-        for (Booking booking : bookings) {
-            if (booking.getHotelRoom() != null) {
-                City location = booking.getHotelRoom().getLocation();
-                LocalDate checkInDate = booking.getCheckInDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                LocalDate checkOutDate = booking.getCheckOutDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        if (bookings == null || bookings.isEmpty()) {
+            return recommendedEvents; // Return empty if no bookings found
+        }
 
-                List<Event> events = eventRepository.findByLocationAndEventDateBetween(location, checkInDate, checkOutDate);
-                recommendedEvents.addAll(events);
+        for (Booking booking : bookings) {
+            if (booking.getHotelRoom() != null && booking.getHotelRoom().getLocation() != null) {
+                City location = booking.getHotelRoom().getLocation();
+
+                if (booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
+                    LocalDate checkInDate = booking.getCheckInDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    LocalDate checkOutDate = booking.getCheckOutDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    List<Event> events = eventRepository.findByLocationAndEventDateBetween(location, checkInDate, checkOutDate);
+                    if (events != null && !events.isEmpty()) {
+                        recommendedEvents.addAll(events);
+                    }
+                }
             }
         }
 

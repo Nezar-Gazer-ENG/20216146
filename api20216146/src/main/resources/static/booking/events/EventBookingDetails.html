@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Booked Events - Travel Booking App</title>
+    <title>Event Booking Details - Travel Booking App</title>
     <link rel="stylesheet" href="/styles.css" />
     <style>
         .navbar {
@@ -34,90 +34,47 @@
             font-size: 1rem;
         }
 
-        .dropdown {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: white;
-            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-            min-width: 160px;
-            border: 1px solid #ddd;
-            z-index: 1;
-            flex-direction: column;
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: flex;
-        }
-
-        .dropdown-content a {
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #007BFF;
-            display: block;
-            width: 100%;
-        }
-
-        .notification-bell {
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #007BFF;
-            margin-left: 15px;
-        }
-
-        .notification-bell:hover {
-            color: #0056b3;
-        }
-
-        .booking-container {
+        .details-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
-            margin-top: 30px;
-        }
-
-        .booking-card {
+            margin: 50px auto;
+            max-width: 600px;
+            width: 90%;
             background-color: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 20px;
-            width: 80%;
-            max-width: 600px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none;
-            color: inherit;
         }
 
-        .booking-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-            background-color: #f0f8ff;
+        .details-container h2 {
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            color: #333;
         }
 
-        .booking-card h3 {
+        .details-container p {
             margin: 10px 0;
-            font-size: 1.5rem;
-        }
-
-        .booking-card p {
-            margin: 5px 0;
             color: #555;
+            font-size: 1.1rem;
         }
 
-        .empty-message {
-            text-align: center;
-            margin-top: 50px;
-            font-size: 1.2rem;
-            color: #777;
+        .details-container .print-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .details-container .print-button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -136,10 +93,14 @@
     </nav>
 </header>
 
-<section class="content">
-    <h2 style="text-align: center; margin-top: 30px;">Booked Events</h2>
-    <div class="booking-container" id="bookingsContainer"></div>
-    <p class="empty-message" id="emptyMessage" style="display: none;">You have no event bookings yet. Start exploring!</p>
+<section class="details-container">
+    <h2>Event Booking Details</h2>
+    <p><strong>Event Name:</strong> <span id="eventName">Loading...</span></p>
+    <p><strong>Event Date:</strong> <span id="eventDate">Loading...</span></p>
+    <p><strong>Tickets Booked:</strong> <span id="ticketsBooked">Loading...</span></p>
+    <p><strong>Total Price:</strong> <span id="totalPrice">Loading...</span></p>
+    <p><strong>Location:</strong> <span id="eventLocation">Loading...</span></p>
+    <button class="print-button" onclick="window.print()">Print Booking Details</button>
 </section>
 
 <footer>
@@ -149,54 +110,40 @@
 </footer>
 
 <script>
-    async function fetchEventBookings() {
-        const endpoint = '/bookings/events';
+    async function fetchBookingDetails() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = urlParams.get('bookingId');
+        if (!bookingId) {
+            alert('Invalid booking ID.');
+            return;
+        }
+
         try {
-            const response = await fetch(endpoint);
+            const response = await fetch(`/bookings/${bookingId}`);
             if (response.ok) {
-                const bookings = await response.json();
-                displayBookings(bookings);
+                const booking = await response.json();
+                displayBookingDetails(booking);
             } else if (response.status === 404) {
-                displayBookings([]);
+                alert('Booking not found.');
+                window.location.href = './BookedEvents.html';
             } else if (response.status === 401) {
-                alert('You must log in to view your bookings.');
+                alert('You must log in to view booking details.');
                 window.location.href = '/login.html';
             } else {
                 alert('An unexpected error occurred. Please try again.');
             }
         } catch (err) {
-            console.error('Error fetching event bookings:', err);
-            alert('An error occurred while fetching bookings. Please try again later.');
+            console.error('Error fetching booking details:', err);
+            alert('An error occurred while fetching booking details. Please try again later.');
         }
     }
 
-    function displayBookings(bookings) {
-        const bookingsContainer = document.getElementById('bookingsContainer');
-        const emptyMessage = document.getElementById('emptyMessage');
-        bookingsContainer.innerHTML = '';
-
-        if (bookings.length === 0) {
-            emptyMessage.style.display = 'block';
-            return;
-        }
-
-        emptyMessage.style.display = 'none';
-
-        bookings.forEach((booking) => {
-            const bookingCard = document.createElement('a');
-            bookingCard.className = 'booking-card';
-            bookingCard.href = `./EventBookingDetails.html?bookingId=${booking.id}`;
-
-            bookingCard.innerHTML = `
-                <h3>Event Booking</h3>
-                <p><strong>Event Name:</strong> ${booking.event.name}</p>
-                <p><strong>Event Date:</strong> ${new Date(booking.event.eventDate).toLocaleDateString()}</p>
-                <p><strong>Tickets Booked:</strong> ${booking.quantity}</p>
-                <p><strong>Total Price:</strong> $${booking.totalAmount.toFixed(2)}</p>
-            `;
-
-            bookingsContainer.appendChild(bookingCard);
-        });
+    function displayBookingDetails(booking) {
+        document.getElementById('eventName').textContent = booking.event.name;
+        document.getElementById('eventDate').textContent = new Date(booking.event.eventDate).toLocaleDateString();
+        document.getElementById('ticketsBooked').textContent = booking.quantity;
+        document.getElementById('totalPrice').textContent = `$${booking.totalAmount.toFixed(2)}`;
+        document.getElementById('eventLocation').textContent = booking.event.location;
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -234,7 +181,7 @@
             console.error('Error checking login status:', err);
         }
 
-        await fetchEventBookings();
+        await fetchBookingDetails();
     });
 </script>
 </body>

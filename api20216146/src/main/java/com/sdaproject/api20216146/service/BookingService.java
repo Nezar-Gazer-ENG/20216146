@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,12 +44,12 @@ public class BookingService {
 
     public Booking createBooking(Booking booking) {
         validateBooking(booking);
-    
+
         User user = userRepository.findById(booking.getUser().getId())
                 .orElseThrow(() -> new RuntimeException("User not found."));
         booking.setUser(user);
         booking.setBookingDate(new Date());
-    
+
         String notificationMessage;
         if (isHotelBooking(booking)) {
             handleHotelBooking(booking);
@@ -65,16 +66,15 @@ public class BookingService {
         } else {
             throw new RuntimeException("Booking must be associated with either a hotel room or an event.");
         }
-    
+
         Booking savedBooking = bookingRepository.save(booking);
         logger.info("Booking created successfully with ID: " + savedBooking.getId());
-    
+
         logger.info("Scheduling notification: " + notificationMessage);
         scheduleNotification(notificationMessage);
-    
+
         return savedBooking;
     }
-    
 
     private void validateBooking(Booking booking) {
         if (booking.getUser() == null || booking.getUser().getId() == null) {
@@ -95,7 +95,11 @@ public class BookingService {
             }
         }, 3, TimeUnit.SECONDS);
     }
-    
+
+    public Booking getBookingById(Long id) {
+        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+        return optionalBooking.orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+    }
 
     public List<Booking> getBookingsByUserId(Long userId) {
         return bookingRepository.findByUserId(userId);
