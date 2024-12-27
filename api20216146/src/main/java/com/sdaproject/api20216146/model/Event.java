@@ -2,6 +2,7 @@ package com.sdaproject.api20216146.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -28,6 +29,9 @@ public class Event {
 
     @Column(nullable = false)
     private int seatsAvailable;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Booking> bookings;
 
     public Event() {}
 
@@ -94,5 +98,23 @@ public class Event {
 
     public void setSeatsAvailable(int seatsAvailable) {
         this.seatsAvailable = seatsAvailable;
+    }
+
+    public List<Booking> getBookings() {
+        return bookings;
+    }
+
+    public void setBookings(List<Booking> bookings) {
+        this.bookings = bookings;
+    }
+
+    public void addBooking(Booking booking) {
+        this.bookings.add(booking);
+        booking.setEvent(this);
+    }
+
+    public void removeBooking(Booking booking) {
+        this.bookings.remove(booking);
+        booking.setEvent(null);
     }
 }

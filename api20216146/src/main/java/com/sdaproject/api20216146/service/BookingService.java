@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -25,7 +23,6 @@ import java.util.logging.Logger;
 public class BookingService {
 
     private static final Logger logger = Logger.getLogger(BookingService.class.getName());
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -53,12 +50,14 @@ public class BookingService {
         String notificationMessage;
         if (isHotelBooking(booking)) {
             handleHotelBooking(booking);
+            booking.setEvent(null); // Ensure event is null for hotel bookings
             notificationMessage = BookingMessageTemplate.getHotelBookingMessage(
                     booking.getHotelRoom().getName(),
                     booking.getCheckInDate().toString()
             );
         } else if (isEventBooking(booking)) {
             handleEventBooking(booking);
+            booking.setHotelRoom(null); // Ensure hotel room is null for event bookings
             notificationMessage = BookingMessageTemplate.getEventBookingMessage(
                     booking.getEvent().getName(),
                     booking.getEvent().getEventDate().toString()
@@ -70,8 +69,8 @@ public class BookingService {
         Booking savedBooking = bookingRepository.save(booking);
         logger.info("Booking created successfully with ID: " + savedBooking.getId());
 
-        logger.info("Scheduling notification: " + notificationMessage);
-        scheduleNotification(notificationMessage);
+        notificationService.sendNotification(user.getId(), notificationMessage);
+        logger.info("Notification sent instantly to user " + user.getId() + ": " + notificationMessage);
 
         return savedBooking;
     }
@@ -83,17 +82,6 @@ public class BookingService {
         if (isHotelBooking(booking) && isEventBooking(booking)) {
             throw new RuntimeException("A booking cannot be associated with both a hotel room and an event.");
         }
-    }
-
-    private void scheduleNotification(String message) {
-        scheduler.schedule(() -> {
-            try {
-                notificationService.sendNotification("/topic/default", message);
-                logger.info("Notification sent after 3 seconds: " + message);
-            } catch (Exception e) {
-                logger.severe("Failed to send delayed notification: " + e.getMessage());
-            }
-        }, 3, TimeUnit.SECONDS);
     }
 
     public Booking getBookingById(Long id) {

@@ -13,28 +13,28 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "hotel_room_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_room_id")
     private HotelRoom hotelRoom;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
     private Event event;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "booking_date", nullable = false)
+    @Column(name = "booking_date", nullable = false, updatable = false)
     private Date bookingDate;
 
     @Temporal(TemporalType.DATE)
-    @Column(name = "check_in_date", nullable = true)
+    @Column(name = "check_in_date")
     private Date checkInDate;
 
     @Temporal(TemporalType.DATE)
-    @Column(name = "check_out_date", nullable = true)
+    @Column(name = "check_out_date")
     private Date checkOutDate;
 
     @Column(nullable = false)
@@ -64,12 +64,14 @@ public class Booking {
         this.id = id;
     }
 
-    
     public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         this.user = user;
     }
 
@@ -94,6 +96,9 @@ public class Booking {
     }
 
     public void setBookingDate(Date bookingDate) {
+        if (bookingDate == null) {
+            throw new IllegalArgumentException("Booking date cannot be null");
+        }
         this.bookingDate = bookingDate;
     }
 
@@ -118,6 +123,9 @@ public class Booking {
     }
 
     public void setQuantity(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than 0");
+        }
         this.quantity = quantity;
     }
 
@@ -126,6 +134,9 @@ public class Booking {
     }
 
     public void setTotalAmount(double totalAmount) {
+        if (totalAmount < 0) {
+            throw new IllegalArgumentException("Total amount cannot be negative");
+        }
         this.totalAmount = totalAmount;
     }
 }

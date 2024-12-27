@@ -13,10 +13,28 @@
         .dropdown:hover .dropdown-content { display: block; }
         .notification-bell { cursor: pointer; font-size: 24px; color: #333; margin-left: 15px; }
         .notification-bell:hover { color: #555; }
-        .notifications-dropdown { display: none; position: absolute; right: 0; background-color: #fff; min-width: 300px; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2); padding: 10px; z-index: 2; border-radius: 5px; }
-        .notification-item { padding: 10px; border-bottom: 1px solid #ddd; }
-        .notification-item:last-child { border-bottom: none; }
-        .notification-item:hover { background-color: #f1f1f1; }
+        .notifications-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 40px; 
+            background-color: #fff;
+            min-width: 300px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            z-index: 9999; 
+            border-radius: 5px;
+        }        
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }        
+        .notification-item:last-child {
+            border-bottom: none;
+        }    
+        .notification-item:hover { 
+            background-color: #f1f1f1; 
+        }
     </style>
 </head>
 <body>
@@ -72,100 +90,73 @@
     </div>
 </footer>
 <script>
-    const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8080';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        let isLoggedIn = false;
+document.addEventListener('DOMContentLoaded', async () => {
+    const authLinks = document.getElementById('authLinks');
+    const bookingsLink = document.getElementById('bookingsLink');
+    const callToActionSection = document.getElementById('callToAction');
 
-        try {
-            const response = await fetch(`${BASE_URL}/auth/me`);
-            const authLinks = document.getElementById('authLinks');
-            const bookingsLink = document.getElementById('bookingsLink');
-            const callToActionSection = document.getElementById('callToAction');
+    try {
+        const response = await fetch(`${BASE_URL}/auth/me`);
 
-            if (response.ok) {
-                const user = await response.json();
-                isLoggedIn = true;
+        if (response.ok) {
+            const user = await response.json();
 
-                authLinks.innerHTML = `
-                    <div class="dropdown">
-                        <a href="#" id="userMenu">${user.username}</a>
-                        <div class="dropdown-content">
-                            <a href="/profile.html">Edit Profile</a>
-                            <a href="#" id="logout">Log Out</a>
-                        </div>
+            // Update navbar with user details and notification bell
+            authLinks.innerHTML = `
+                <div class="dropdown">
+                    <a href="#" id="userMenu">${user.username}</a>
+                    <div class="dropdown-content">
+                        <a href="/profile.html">Edit Profile</a>
+                        <a href="#" id="logout">Log Out</a>
                     </div>
-                    <span class="notification-bell" id="notificationBell" aria-label="Notification Bell">🔔</span>
-                    <div class="notifications-dropdown" id="notificationsDropdown"></div>
-                `;
+                </div>
+                <span class="notification-bell" id="notificationBell" aria-label="Notification Bell">🔔</span>
+            `;
 
-                bookingsLink.href = "./booking/view_bookings.html";
+            bookingsLink.href = "./booking/view_bookings.html";
 
-                if (callToActionSection) {
-                    callToActionSection.style.display = 'none'; 
-                }
-
-                const logout = document.getElementById('logout');
-                logout.addEventListener('click', async () => {
-                    const logoutResponse = await fetch(`${BASE_URL}/auth/logout`, { method: 'POST' });
-                    if (logoutResponse.ok) {
-                        alert('You have been logged out.');
-                        window.location.reload();
-                    } else {
-                        alert('Error during logout.');
-                    }
-                });
-
-                const notificationBell = document.getElementById('notificationBell');
-                const notificationsDropdown = document.getElementById('notificationsDropdown');
-
-                const socket = new SockJS(`${BASE_URL}/websocket`);
-                const stompClient = Stomp.over(socket);
-                stompClient.connect({}, () => {
-                    stompClient.subscribe('/topic/default', (message) => {
-                        const notification = JSON.parse(message.body);
-                        const notificationItem = `<div class="notification-item">${notification.message}</div>`;
-                        notificationsDropdown.innerHTML += notificationItem;
-                    });
-                });
-
-                notificationBell.addEventListener('click', async () => {
-                    notificationsDropdown.style.display = notificationsDropdown.style.display === 'block' ? 'none' : 'block';
-                    if (notificationsDropdown.style.display === 'block') {
-                        try {
-                            const userId = user.id; 
-                            const response = await fetch(`${BASE_URL}/notifications?userId=${userId}`);
-                            if (response.ok) {
-                                const notifications = await response.json();
-                                notificationsDropdown.innerHTML = notifications.length
-                                    ? notifications.map(notification => `<div class="notification-item">${notification.message}</div>`).join('')
-                                    : '<div class="notification-item">You have no notifications.</div>';
-                            } else {
-                                notificationsDropdown.innerHTML = '<div class="notification-item">Failed to load notifications.</div>';
-                            }
-                        } catch (error) {
-                            console.error('Error fetching notifications:', error);
-                            notificationsDropdown.innerHTML = '<div class="notification-item">Error fetching notifications.</div>';
-                        }
-                    }
-                });
-
-            } else {
-                console.warn('User is not logged in');
-                bookingsLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    alert('You must log in first to view bookings.');
-                });
-
-                authLinks.innerHTML = `
-                    <a href="/signup.html" id="signupLink">Sign Up</a>
-                    <a href="/login.html" id="loginLink">Log In</a>
-                `;
+            if (callToActionSection) {
+                callToActionSection.style.display = 'none';
             }
-        } catch (err) {
-            console.error('Error checking login status:', err);
+
+            // Handle logout
+            const logout = document.getElementById('logout');
+            logout.addEventListener('click', async () => {
+                const logoutResponse = await fetch(`${BASE_URL}/auth/logout`, { method: 'POST' });
+                if (logoutResponse.ok) {
+                    alert('You have been logged out.');
+                    window.location.reload();
+                } else {
+                    alert('Error during logout.');
+                }
+            });
+
+            // Handle notification bell click
+            const notificationBell = document.getElementById('notificationBell');
+            notificationBell.addEventListener('click', () => {
+                window.location.href = '/inbox.html';
+            });
+
+        } else {
+            console.warn('User is not logged in');
+            bookingsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('You must log in first to view bookings.');
+            });
+
+            authLinks.innerHTML = `
+                <a href="/signup.html" id="signupLink">Sign Up</a>
+                <a href="/login.html" id="loginLink">Log In</a>
+            `;
         }
-    });
+    } catch (err) {
+        console.error('Error checking login status:', err);
+    }
+});
+
 </script>
+
 </body>
 </html>

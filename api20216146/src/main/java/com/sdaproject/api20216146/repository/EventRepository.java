@@ -29,5 +29,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             LocalDate endDate,
             int minSeats
     );
+    
 
 }

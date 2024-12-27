@@ -148,6 +148,15 @@ public class BookingController {
                         .body("{\"message\":\"Booking must be associated with either a hotel room or an event.\"}");
             }
 
+            if (booking.getEvent() != null) {
+                booking.setHotelRoom(null);
+                logger.info("Creating an event booking for user ID: " + loggedInUser.getId());
+            }
+            if (booking.getHotelRoom() != null) {
+                booking.setEvent(null);
+                logger.info("Creating a hotel booking for user ID: " + loggedInUser.getId());
+            }
+
             booking.setUser(loggedInUser);
             Booking createdBooking = bookingService.createBooking(booking);
             logger.info("Booking created successfully for user ID: " + loggedInUser.getId());

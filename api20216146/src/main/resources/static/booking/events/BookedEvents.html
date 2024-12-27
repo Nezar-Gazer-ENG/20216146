@@ -189,10 +189,10 @@
 
             bookingCard.innerHTML = `
                 <h3>Event Booking</h3>
-                <p><strong>Event Name:</strong> ${booking.event.name}</p>
-                <p><strong>Event Date:</strong> ${new Date(booking.event.eventDate).toLocaleDateString()}</p>
+                <p><strong>Event Name:</strong> ${booking.event?.name || 'N/A'}</p>
+                <p><strong>Event Date:</strong> ${booking.event?.eventDate ? new Date(booking.event.eventDate).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Tickets Booked:</strong> ${booking.quantity}</p>
-                <p><strong>Total Price:</strong> $${booking.totalAmount.toFixed(2)}</p>
+                <p><strong>Total Price:</strong> $${booking.totalAmount?.toFixed(2) || 'N/A'}</p>
             `;
 
             bookingsContainer.appendChild(bookingCard);
